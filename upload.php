@@ -1,4 +1,3 @@
-/* FILE: public_html/public/upload.php */
 <?php
 require_once __DIR__ . '/includes/session_check.php';
 
@@ -24,8 +23,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_FILES["csv_file"])) {
             $upload_error = "File is too large. Maximum size is 5MB.";
         } else {
             // --- FILE PROCESSING ---
-            // Sanitize filename
-            $safe_filename = preg_replace("/[^a-zA-Z0-9-_"]/, "", basename($file["name"]));
+            // Sanitize filename to allow letters, numbers, dashes, underscores, and dots
+            $safe_filename = preg_replace("/[^a-zA-Z0-9-._]/", "", basename($file["name"]));
             $file_path = $file["tmp_name"];
             $file_size_kb = round($file["size"] / 1024, 2);
 
@@ -45,10 +44,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_FILES["csv_file"])) {
                     }
 
                     if ($is_first_row) {
-                        // Trim headers to remove any potential BOM or whitespace
+                        // Process headers: remove BOM and trim whitespace
                         $headers = array_map(function($header) {
-                            return trim($header, " 	
-\0\x0B\xEF\xBB\xBF");
+                            // Remove UTF-8 BOM if present
+                            if (substr($header, 0, 3) === "\xEF\xBB\xBF") {
+                                $header = substr($header, 3);
+                            }
+                            // Trim whitespace from header
+                            return trim($header);
                         }, $row);
                         $is_first_row = false;
                     } else {
@@ -76,7 +79,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_FILES["csv_file"])) {
                     $stmt->bind_param("sssid", $safe_filename, $description, $json_text, $row_count, $file_size_kb);
 
                     if ($stmt->execute()) {
-                        $_SESSION['message'] = "File '".htmlspecialchars($safe_filename).'" uploaded and processed successfully.";
+                        $_SESSION['message'] = "File '" . htmlspecialchars($safe_filename) . "' uploaded and processed successfully.";
                         $_SESSION['message_type'] = "success";
                         header("Location: index.php");
                         exit;
