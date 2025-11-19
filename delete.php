@@ -1,6 +1,6 @@
 /* FILE: public_html/public/delete.php */
 <?php
-require_once __DIR__ . '/../includes/session_check.php';
+require_once __DIR__ . '/includes/session_check.php';
 
 // Check for ID
 if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {

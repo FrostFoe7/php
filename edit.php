@@ -1,6 +1,6 @@
 /* FILE: public_html/public/edit.php */
 <?php
-require_once __DIR__ . '/../includes/session_check.php';
+require_once __DIR__ . '/includes/session_check.php';
 
 // --- VALIDATE FILE ID ---
 if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
@@ -83,7 +83,7 @@ if (json_last_error() !== JSON_ERROR_NONE) {
     die("Error decoding JSON: " . json_last_error_msg());
 }
 
-include_once __DIR__ . '/../templates/header.php';
+include_once __DIR__ . '/templates/header.php';
 ?>
 
 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -209,6 +209,6 @@ function addQuestion() {
 </script>
 
 <?php
-include_once __DIR__ . '/../templates/footer.php';
+include_once __DIR__ . '/templates/footer.php';
 $conn->close();
 ?>

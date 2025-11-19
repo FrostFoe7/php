@@ -11,6 +11,6 @@ if (!isset($_SESSION['user_id'])) {
 
     // Redirect them to the login page.
     // Note: Adjust the path if your file structure is different.
-    header("Location: /public/login.php");
+    header("Location: login.php");
     exit; // Stop script execution after redirect.
 }

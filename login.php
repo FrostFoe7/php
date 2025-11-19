@@ -1,7 +1,7 @@
 /* FILE: public_html/public/login.php */
 <?php
 // The config file is needed for database connection and admin credentials.
-require_once __DIR__ . '/../includes/config.php';
+require_once __DIR__ . '/includes/config.php';
 
 $error_message = '';
 
@@ -38,7 +38,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 // This flag tells the header not to include the nav bar.
 $is_login_page = true;
-include_once __DIR__ . '/../templates/header.php';
+include_once __DIR__ . '/templates/header.php';
 ?>
 
 <div class="row justify-content-center">

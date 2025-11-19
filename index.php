@@ -1,13 +1,13 @@
 /* FILE: public_html/public/index.php */
 <?php
 // Protect this page, require login
-require_once __DIR__ . '/../includes/session_check.php';
+require_once __DIR__ . '/includes/session_check.php';
 // The config file is already included by session_check.php
 
 // Fetch all files from the database
 $result = $conn->query("SELECT id, filename, description, row_count, size_kb, created_at FROM csv_files ORDER BY created_at DESC");
 
-include_once __DIR__ . '/../templates/header.php';
+include_once __DIR__ . '/templates/header.php';
 ?>
 
 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -62,6 +62,6 @@ include_once __DIR__ . '/../templates/header.php';
 </div>
 
 <?php
-include_once __DIR__ . '/../templates/footer.php';
+include_once __DIR__ . '/templates/footer.php';
 $conn->close();
 ?>

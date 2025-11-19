@@ -1,6 +1,6 @@
 /* FILE: public_html/public/upload.php */
 <?php
-require_once __DIR__ . '/../includes/session_check.php';
+require_once __DIR__ . '/includes/session_check.php';
 
 $upload_error = '';
 $upload_success = '';
@@ -90,7 +90,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_FILES["csv_file"])) {
     }
 }
 
-include_once __DIR__ . '/../templates/header.php';
+include_once __DIR__ . '/templates/header.php';
 ?>
 
 <h2><i class="bi bi-cloud-upload"></i> Upload CSV File</h2>
@@ -117,6 +117,6 @@ include_once __DIR__ . '/../templates/header.php';
 </div>
 
 <?php
-include_once __DIR__ . '/../templates/footer.php';
+include_once __DIR__ . '/templates/footer.php';
 $conn->close();
 ?>

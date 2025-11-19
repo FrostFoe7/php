@@ -1,6 +1,6 @@
 /* FILE: public_html/public/view.php */
 <?php
-require_once __DIR__ . '/../includes/session_check.php';
+require_once __DIR__ . '/includes/session_check.php';
 
 // Check for ID
 if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
@@ -28,7 +28,7 @@ if ($result->num_rows === 0) {
 $file = $result->fetch_assoc();
 $stmt->close();
 
-include_once __DIR__ . '/../templates/header.php';
+include_once __DIR__ . '/templates/header.php';
 ?>
 
 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -68,6 +68,6 @@ include_once __DIR__ . '/../templates/header.php';
 
 
 <?php
-include_once __DIR__ . '/../templates/footer.php';
+include_once __DIR__ . '/templates/footer.php';
 $conn->close();
 ?>

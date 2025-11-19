@@ -10,7 +10,7 @@
     <!-- Bootstrap Icons CDN -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
@@ -20,8 +20,8 @@
 // We check for a defined variable $is_login_page, which should be set to true on login.php
 if (!isset($is_login_page) || $is_login_page === false) {
     // The nav requires the config file for session status, so we include it if not already.
-    if (file_exists(__DIR__ . '/../includes/config.php')) {
-        require_once __DIR__ . '/../includes/config.php';
+    if (file_exists(__DIR__ . '/includes/config.php')) {
+        require_once __DIR__ . '/includes/config.php';
     }
     if (isset($_SESSION['user_id'])) {
         include_once __DIR__ . '/nav.php';

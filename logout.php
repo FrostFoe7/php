@@ -1,7 +1,7 @@
 /* FILE: public_html/public/logout.php */
 <?php
 // The config file starts the session.
-require_once __DIR__ . '/../includes/config.php';
+require_once __DIR__ . '/includes/config.php';
 
 // Unset all of the session variables.
 $_SESSION = array();

@@ -1,7 +1,7 @@
 /* FILE: public_html/public/api/get.php */
 <?php
 // The config file contains the database connection and the API key.
-require_once __DIR__ . '/../../includes/config.php';
+require_once __DIR__ . '/../includes/config.php';
 
 // Set the content type to JSON for the response.
 header('Content-Type: application/json');
