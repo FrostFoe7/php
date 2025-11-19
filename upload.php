@@ -13,11 +13,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_FILES["csv_file"])) {
     if ($file["error"] !== UPLOAD_ERR_OK) {
         $upload_error = "File upload error. Code: " . $file["error"];
     } else {
-        // Validate file extension
-        $file_ext = strtolower(pathinfo($file["name"], PATHINFO_EXTENSION));
-        if ($file_ext !== 'csv') {
-            $upload_error = "Invalid file type. Only .csv files are allowed.";
-        }
+
         // Validate file size (5MB max)
         elseif ($file["size"] > 5 * 1024 * 1024) {
             $upload_error = "File is too large. Maximum size is 5MB.";
@@ -107,8 +103,8 @@ include_once __DIR__ . '/templates/header.php';
         <form action="upload.php" method="post" enctype="multipart/form-data">
             <div class="mb-3">
                 <label for="csv_file" class="form-label">CSV File</label>
-                <input class="form-control" type="file" id="csv_file" name="csv_file" accept=".csv" required>
-                <div class="form-text">Max file size: 5MB. Must be a .csv file. The first row should contain headers.</div>
+                <input class="form-control" type="file" id="csv_file" name="csv_file" required>
+                <div class="form-text">Max file size: 5MB. The first row should contain headers.</div>
             </div>
             <div class="mb-3">
                 <label for="description" class="form-label">Description (Optional)</label>
