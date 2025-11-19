@@ -24,16 +24,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         // Rebuild the associative array for each question
         $new_data[] = [
-            'Question' => $question['question'] ?? '',
-            'Option 1' => $question['option1'] ?? '',
-            'Option 2' => $question['option2'] ?? '',
-            'Option 3' => $question['option3'] ?? '',
-            'Option 4' => $question['option4'] ?? '',
-            'Option 5' => $question['option5'] ?? '',
-            'Answer' => $question['answer'] ?? '',
-            'Explanation' => $question['explanation'] ?? '',
-            'Type' => $question['type'] ?? '',
-            'Section' => $question['section'] ?? ''
+            'questions' => $question['question'] ?? '',
+            'option1' => $question['option1'] ?? '',
+            'option2' => $question['option2'] ?? '',
+            'option3' => $question['option3'] ?? '',
+            'option4' => $question['option4'] ?? '',
+            'option5' => $question['option5'] ?? '',
+            'answer' => $question['answer'] ?? '',
+            'explanation' => $question['explanation'] ?? '',
+            'type' => $question['type'] ?? '',
+            'section' => $question['section'] ?? ''
         ];
     }
 
@@ -107,30 +107,30 @@ include_once __DIR__ . '/templates/header.php';
                         <input type="hidden" name="questions[<?php echo $index; ?>][delete]" id="delete-flag-<?php echo $index; ?>" value="0">
                         <div class="mb-3">
                             <label class="form-label">Question</label>
-                            <textarea class="form-control" name="questions[<?php echo $index; ?>][question]"><?php echo htmlspecialchars($q['Question'] ?? ''); ?></textarea>
+                            <textarea class="form-control" name="questions[<?php echo $index; ?>][question]"><?php echo htmlspecialchars($q['questions'] ?? ''); ?></textarea>
                         </div>
                         <div class="row">
-                            <div class="col-md-6"><label class="form-label">Option 1</label><input type="text" class="form-control" name="questions[<?php echo $index; ?>][option1]" value="<?php echo htmlspecialchars($q['Option 1'] ?? ''); ?>"></div>
-                            <div class="col-md-6"><label class="form-label">Option 2</label><input type="text" class="form-control" name="questions[<?php echo $index; ?>][option2]" value="<?php echo htmlspecialchars($q['Option 2'] ?? ''); ?>"></div>
-                            <div class="col-md-6"><label class="form-label">Option 3</label><input type="text" class="form-control" name="questions[<?php echo $index; ?>][option3]" value="<?php echo htmlspecialchars($q['Option 3'] ?? ''); ?>"></div>
-                            <div class="col-md-6"><label class="form-label">Option 4</label><input type="text" class="form-control" name="questions[<?php echo $index; ?>][option4]" value="<?php echo htmlspecialchars($q['Option 4'] ?? ''); ?>"></div>
-                            <div class="col-md-6"><label class="form-label">Option 5</label><input type="text" class="form-control" name="questions[<?php echo $index; ?>][option5]" value="<?php echo htmlspecialchars($q['Option 5'] ?? ''); ?>"></div>
+                            <div class="col-md-6"><label class="form-label">Option 1</label><input type="text" class="form-control" name="questions[<?php echo $index; ?>][option1]" value="<?php echo htmlspecialchars($q['option1'] ?? ''); ?>"></div>
+                            <div class="col-md-6"><label class="form-label">Option 2</label><input type="text" class="form-control" name="questions[<?php echo $index; ?>][option2]" value="<?php echo htmlspecialchars($q['option2'] ?? ''); ?>"></div>
+                            <div class="col-md-6"><label class="form-label">Option 3</label><input type="text" class="form-control" name="questions[<?php echo $index; ?>][option3]" value="<?php echo htmlspecialchars($q['option3'] ?? ''); ?>"></div>
+                            <div class="col-md-6"><label class="form-label">Option 4</label><input type="text" class="form-control" name="questions[<?php echo $index; ?>][option4]" value="<?php echo htmlspecialchars($q['option4'] ?? ''); ?>"></div>
+                            <div class="col-md-6"><label class="form-label">Option 5</label><input type="text" class="form-control" name="questions[<?php echo $index; ?>][option5]" value="<?php echo htmlspecialchars($q['option5'] ?? ''); ?>"></div>
                             <div class="col-md-6">
                                 <label class="form-label">Correct Answer</label>
                                 <select class="form-select" name="questions[<?php echo $index; ?>][answer]">
                                     <?php for ($i = 1; $i <= 5; $i++): ?>
-                                        <option value="<?php echo $i; ?>" <?php echo (isset($q['Answer']) && $q['Answer'] == $i) ? 'selected' : ''; ?>>Option <?php echo $i; ?></option>
+                                        <option value="<?php echo $i; ?>" <?php echo (isset($q['answer']) && $q['answer'] == $i) ? 'selected' : ''; ?>>Option <?php echo $i; ?></option>
                                     <?php endfor; ?>
                                 </select>
                             </div>
                         </div>
                         <div class="mb-3 mt-3">
                             <label class="form-label">Explanation (HTML allowed)</label>
-                            <textarea class="form-control" name="questions[<?php echo $index; ?>][explanation]" rows="3"><?php echo htmlspecialchars($q['Explanation'] ?? ''); ?></textarea>
+                            <textarea class="form-control" name="questions[<?php echo $index; ?>][explanation]" rows="3"><?php echo htmlspecialchars($q['explanation'] ?? ''); ?></textarea>
                         </div>
                         <div class="row">
-                            <div class="col-md-6"><label class="form-label">Type</label><input type="text" class="form-control" name="questions[<?php echo $index; ?>][type]" value="<?php echo htmlspecialchars($q['Type'] ?? ''); ?>"></div>
-                            <div class="col-md-6"><label class="form-label">Section</label><input type="text" class="form-control" name="questions[<?php echo $index; ?>][section]" value="<?php echo htmlspecialchars($q['Section'] ?? ''); ?>"></div>
+                            <div class="col-md-6"><label class="form-label">Type</label><input type="text" class="form-control" name="questions[<?php echo $index; ?>][type]" value="<?php echo htmlspecialchars($q['type'] ?? ''); ?>"></div>
+                            <div class="col-md-6"><label class="form-label">Section</label><input type="text" class="form-control" name="questions[<?php echo $index; ?>][section]" value="<?php echo htmlspecialchars($q['section'] ?? ''); ?>"></div>
                         </div>
                     </div>
                 </div>
