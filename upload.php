@@ -12,12 +12,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_FILES["csv_file"])) {
     // Check for upload errors
     if ($file["error"] !== UPLOAD_ERR_OK) {
         $upload_error = "File upload error. Code: " . $file["error"];
+    } elseif ($file["size"] > 5 * 1024 * 1024) { // Validate file size (5MB max)
+        $upload_error = "File is too large. Maximum size is 5MB.";
     } else {
-
-        // Validate file size (5MB max)
-        elseif ($file["size"] > 5 * 1024 * 1024) {
-            $upload_error = "File is too large. Maximum size is 5MB.";
-        } else {
             // --- FILE PROCESSING ---
             // Sanitize filename to allow letters, numbers, dashes, underscores, and dots
             $safe_filename = preg_replace("/[^a-zA-Z0-9-._]/", "", basename($file["name"]));
@@ -86,7 +83,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_FILES["csv_file"])) {
                 }
             }
         }
-    }
 }
 
 include_once __DIR__ . '/templates/header.php';
