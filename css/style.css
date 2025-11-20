@@ -1,27 +1,28 @@
 /* FILE: public_html/css/style.css */
 body {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .footer {
-    margin-top: auto;
+  margin-top: auto;
 }
 
 .card-question {
-    border-left-width: 4px;
+  border-left-width: 4px;
 }
 
 .json-preview {
-    background-color: #f8f9fa;
-    border: 1px solid #dee2e6;
-    padding: 1rem;
-    border-radius: 0.25rem;
-    max-height: 500px;
-    overflow-y: auto;
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  padding: 1rem;
+  border-radius: 0.25rem;
+  max-height: 500px;
+  overflow-y: auto;
 }
 
-.form-control, .form-select {
-    margin-bottom: 10px;
+.form-control,
+.form-select {
+  margin-bottom: 10px;
 }

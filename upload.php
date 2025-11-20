@@ -5,52 +5,40 @@ $upload_error = '';
 $upload_success = '';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_FILES["csv_file"])) {
-    // --- FILE VALIDATION ---
     $file = $_FILES["csv_file"];
     $description = trim($_POST['description']);
 
-    // Check for upload errors
     if ($file["error"] !== UPLOAD_ERR_OK) {
         $upload_error = "File upload error. Code: " . $file["error"];
-    } elseif ($file["size"] > 5 * 1024 * 1024) { // Validate file size (5MB max)
+    } elseif ($file["size"] > 5 * 1024 * 1024) {
         $upload_error = "File is too large. Maximum size is 5MB.";
     } else {
-            // --- FILE PROCESSING ---
-            // Sanitize filename to allow letters, numbers, dashes, underscores, and dots
-            $safe_filename = preg_replace("/[^a-zA-Z0-9-._]/", "", basename($file["name"]));
+            $safe_filename = preg_replace("/[^a-zA-Z0-9-._ ]/", "", basename($file["name"]));
             $file_path = $file["tmp_name"];
             $file_size_kb = round($file["size"] / 1024, 2);
 
-            // --- CSV PARSING ---
             $csv_data = [];
             $headers = [];
             $is_first_row = true;
 
-            // Set locale to handle UTF-8 correctly
             setlocale(LC_ALL, 'en_US.UTF-8');
 
             if (($handle = fopen($file_path, "r")) !== FALSE) {
                 while (($row = fgetcsv($handle, 0, ",")) !== FALSE) {
-                    // Ignore empty lines
                     if (empty(array_filter($row))) {
                         continue;
                     }
 
                     if ($is_first_row) {
-                        // Process headers: remove BOM and trim whitespace
                         $headers = array_map(function($header) {
-                            // Remove UTF-8 BOM if present
                             if (substr($header, 0, 3) === "\xEF\xBB\xBF") {
                                 $header = substr($header, 3);
                             }
-                            // Trim whitespace from header
                             return trim($header);
                         }, $row);
                         $is_first_row = false;
                     } else {
-                        // Ensure row has the same number of columns as headers, padding with empty strings if not
                         $row = array_pad($row, count($headers), "");
-                        // Combine headers with the row data
                         $csv_data[] = array_combine($headers, $row);
                     }
                 }
@@ -61,13 +49,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_FILES["csv_file"])) {
 
             if (empty($upload_error)) {
                 $row_count = count($csv_data);
-                // Convert array to JSON, preserving Unicode and slashes
                 $json_text = json_encode($csv_data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
 
                 if (json_last_error() !== JSON_ERROR_NONE) {
                     $upload_error = "Error encoding data to JSON: " . json_last_error_msg();
                 } else {
-                    // --- DATABASE INSERTION ---
                     $stmt = $conn->prepare("INSERT INTO csv_files (filename, description, json_text, row_count, size_kb) VALUES (?, ?, ?, ?, ?)");
                     $stmt->bind_param("sssid", $safe_filename, $description, $json_text, $row_count, $file_size_kb);
 

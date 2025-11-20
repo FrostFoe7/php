@@ -1,4 +1,5 @@
-/* FILE: public_html/README.md */
+/_ FILE: public_html/README.md _/
+
 # CSV to JSON Web System
 
 This is a full PHP web system that allows uploading CSV files, converting them to JSON, storing them in a MySQL database, and providing a UI to edit the data.
@@ -16,22 +17,22 @@ This is a full PHP web system that allows uploading CSV files, converting them t
 ## Setup Instructions (cPanel)
 
 1.  **Database Setup**:
-    *   Create a new MySQL database in your cPanel.
-    *   Create a new MySQL user and assign it to the database with all privileges.
-    *   Import the `database.sql` file into your newly created database using phpMyAdmin.
+    - Create a new MySQL database in your cPanel.
+    - Create a new MySQL user and assign it to the database with all privileges.
+    - Import the `database.sql` file into your newly created database using phpMyAdmin.
 
 2.  **Configuration**:
-    *   Open `includes/config.php`.
-    *   Update the database credentials (`DB_HOST`, `DB_USER`, `DB_PASS`, `DB_NAME`) with the details from the previous step.
-    *   Set a secure `ADMIN_USERNAME` and `ADMIN_PASSWORD`. The password should be hashed. You can use an online tool to generate a `PASSWORD_DEFAULT` hash.
-    *   Define a secret `API_KEY` for the API endpoint.
+    - Open `includes/config.php`.
+    - Update the database credentials (`DB_HOST`, `DB_USER`, `DB_PASS`, `DB_NAME`) with the details from the previous step.
+    - Set a secure `ADMIN_USERNAME` and `ADMIN_PASSWORD`. The password should be hashed. You can use an online tool to generate a `PASSWORD_DEFAULT` hash.
+    - Define a secret `API_KEY` for the API endpoint.
 
 3.  **Upload Files**:
-    *   Upload all the files from the `public_html` directory to your domain's root directory (usually also named `public_html` or `www`) on your cPanel server.
+    - Upload all the files from the `public_html` directory to your domain's root directory (usually also named `public_html` or `www`) on your cPanel server.
 
 4.  **Login**:
-    *   Navigate to `yourdomain.com/public/login.php` to access the login page.
-    *   Use the admin credentials you set in `config.php` to log in.
+    - Navigate to `yourdomain.com/public/login.php` to access the login page.
+    - Use the admin credentials you set in `config.php` to log in.
 
 ## File Structure
 
@@ -49,4 +50,5 @@ This is a full PHP web system that allows uploading CSV files, converting them t
 - All admin pages are protected by a session check.
 - File uploads are validated for extension (`.csv`) and size.
 - **IMPORTANT**: It is recommended to set the admin password in `config.php` to a hashed value for better security.
+
 # php

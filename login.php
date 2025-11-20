@@ -1,33 +1,24 @@
-/* FILE: public_html/public/login.php */
 <?php
-// The config file is needed for database connection and admin credentials.
 require_once __DIR__ . '/includes/config.php';
 
 $error_message = '';
 
-// If the user is already logged in, redirect them to the dashboard.
 if (isset($_SESSION['user_id'])) {
     header("Location: index.php");
     exit;
 }
 
-// Handle form submission
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $username = trim($_POST['username']);
     $password = $_POST['password'];
 
-    // Basic validation
     if (empty($username) || empty($password)) {
         $error_message = "Username and password are required.";
     } else {
-        // Check if the provided credentials match the ones in the config file.
-        // This is a simple check. For a real-world application, you MUST hash passwords.
         if ($username === ADMIN_USERNAME && $password === ADMIN_PASSWORD) {
-            // On successful login, store a user identifier in the session.
-            $_SESSION['user_id'] = 'admin'; // A simple identifier
+            $_SESSION['user_id'] = 'admin';
             $_SESSION['username'] = $username;
 
-            // Redirect to the main dashboard page.
             header("Location: index.php");
             exit;
         } else {
@@ -36,7 +27,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 }
 
-// This flag tells the header not to include the nav bar.
 $is_login_page = true;
 include_once __DIR__ . '/templates/header.php';
 ?>

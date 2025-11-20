@@ -1,8 +1,6 @@
-/* FILE: public_html/public/edit.php */
 <?php
 require_once __DIR__ . '/includes/session_check.php';
 
-// --- VALIDATE FILE ID ---
 if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
     $_SESSION['message'] = "Invalid file ID.";
     $_SESSION['message_type'] = "danger";
@@ -11,18 +9,15 @@ if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
 }
 $file_id = (int)$_GET['id'];
 
-// --- HANDLE FORM SUBMISSION (POST REQUEST) ---
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $questions = $_POST['questions'] ?? [];
     $new_data = [];
 
     foreach ($questions as $index => $question) {
-        // If a question is marked for deletion, just skip it
         if (isset($question['delete']) && $question['delete'] == '1') {
             continue;
         }
 
-        // Rebuild the associative array for each question
         $new_data[] = [
             'questions' => $question['question'] ?? '',
             'option1' => $question['option1'] ?? '',
@@ -61,8 +56,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     exit;
 }
 
-
-// --- FETCH DATA FOR DISPLAY (GET REQUEST) ---
 $stmt = $conn->prepare("SELECT filename, json_text FROM csv_files WHERE id = ?");
 $stmt->bind_param("i", $file_id);
 $stmt->execute();

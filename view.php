@@ -1,8 +1,6 @@
-/* FILE: public_html/public/view.php */
 <?php
 require_once __DIR__ . '/includes/session_check.php';
 
-// Check for ID
 if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
     $_SESSION['message'] = "Invalid file ID.";
     $_SESSION['message_type'] = "danger";
@@ -12,7 +10,6 @@ if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
 
 $file_id = (int)$_GET['id'];
 
-// Fetch file data from the database
 $stmt = $conn->prepare("SELECT filename, description, json_text, row_count, size_kb, created_at FROM csv_files WHERE id = ?");
 $stmt->bind_param("i", $file_id);
 $stmt->execute();
@@ -65,7 +62,6 @@ include_once __DIR__ . '/templates/header.php';
         <pre class="json-preview"><code><?php echo htmlspecialchars($file['json_text']); ?></code></pre>
     </div>
 </div>
-
 
 <?php
 include_once __DIR__ . '/templates/footer.php';

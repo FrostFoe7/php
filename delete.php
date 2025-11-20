@@ -1,8 +1,6 @@
-/* FILE: public_html/public/delete.php */
 <?php
 require_once __DIR__ . '/includes/session_check.php';
 
-// Check for ID
 if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
     $_SESSION['message'] = "Invalid file ID.";
     $_SESSION['message_type'] = "danger";
@@ -12,7 +10,6 @@ if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
 
 $file_id = (int)$_GET['id'];
 
-// Fetch filename for the success message before deleting
 $stmt_select = $conn->prepare("SELECT filename FROM csv_files WHERE id = ?");
 $stmt_select->bind_param("i", $file_id);
 $stmt_select->execute();
@@ -28,7 +25,6 @@ if (!$file) {
     exit;
 }
 
-// Prepare and execute the deletion
 $stmt_delete = $conn->prepare("DELETE FROM csv_files WHERE id = ?");
 $stmt_delete->bind_param("i", $file_id);
 
@@ -43,6 +39,5 @@ if ($stmt_delete->execute()) {
 $stmt_delete->close();
 $conn->close();
 
-// Redirect back to the dashboard
 header("Location: index.php");
 exit;
