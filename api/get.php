@@ -9,16 +9,17 @@ header('Content-Type: application/json');
 // --- API RESPONSE HELPER ---
 function api_response($success, $data = [], $message = '', $statusCode = 200) {
     http_response_code($statusCode);
-    $response = ['success' => $success];
-    if ($message) {
-        $response['message'] = $message;
+    if ($success && isset($data['data'])) {
+        // Return only the data array for successful responses
+        echo json_encode($data['data'], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+    } else {
+        // Return error response with success and message
+        $response = ['success' => $success];
+        if ($message) {
+            $response['message'] = $message;
+        }
+        echo json_encode($response, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
     }
-    // Only include data if success is true
-    if ($success) {
-        // Merge the data into the top-level response
-        $response = array_merge($response, $data);
-    }
-    echo json_encode($response, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
     exit;
 }
 
@@ -55,11 +56,5 @@ if (json_last_error() !== JSON_ERROR_NONE) {
     api_response(false, [], 'Internal Server Error: Failed to parse stored JSON data.', 500);
 }
 
-$response_data = [
-    'id' => $file['id'],
-    'filename' => $file['filename'],
-    'row_count' => $file['row_count'],
-    'data' => $json_data
-];
-
-api_response(true, $response_data, 'Data retrieved successfully.');
+// Return only the data array without additional metadata
+api_response(true, ['data' => $json_data], '');
