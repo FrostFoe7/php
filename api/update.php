@@ -24,74 +24,64 @@ if (empty($api_key) || !defined('API_KEY') || $api_key !== API_KEY) {
     api_response(false, [], 'Unauthorized: Invalid or missing API key.', 401);
 }
 
-$file_id = $_POST['file_id'] ?? null;
 $sr_no = $_POST['sr_no'] ?? null;
 $field = $_POST['field'] ?? null;
 $value = $_POST['value'] ?? null;
 
-if (empty($file_id) || empty($sr_no) || empty($field)) {
-    api_response(false, [], 'Missing required parameters: file_id, sr_no, field.', 400);
+if (empty($sr_no) || empty($field)) {
+    api_response(false, [], 'Missing required parameters: sr_no, field.', 400);
 }
 
-// Fetch the specific JSON file from the database
-$stmt = $conn->prepare("SELECT json_text FROM csv_files WHERE id = ?");
-$stmt->bind_param("i", $file_id);
-$stmt->execute();
-$result = $stmt->get_result();
-$file = $result->fetch_assoc();
-$stmt->close();
-
-if (!$file) {
-    api_response(false, [], 'File not found.', 404);
-}
-
-$json_data = json_decode($file['json_text'], true);
-if (json_last_error() !== JSON_ERROR_NONE) {
-    api_response(false, [], 'Error decoding JSON data.', 500);
-}
-
-// Find the record to update. Since sr_no is 1-based index, we convert to 0-based.
-$index_to_update = -1;
-$current_sr_no = 1;
-
-// We need to find the overall index of the sr_no in the context of ALL files
-// This is not efficient, but it's the only way with the current structure.
-$all_data = [];
+$all_files_data = [];
 $stmt = $conn->prepare("SELECT id, json_text FROM csv_files ORDER BY id");
 $stmt->execute();
 $all_files_result = $stmt->get_result();
-while ($current_file = $all_files_result->fetch_assoc()) {
-    $current_json_data = json_decode($current_file['json_text'], true);
+
+$global_sr_no_map = [];
+$current_global_sr_no = 1;
+
+while ($file = $all_files_result->fetch_assoc()) {
+    $file_id = $file['id'];
+    $json_data_for_file = json_decode($file['json_text'], true);
+
     if (json_last_error() === JSON_ERROR_NONE) {
-        foreach ($current_json_data as $row) {
-            if ($current_file['id'] == $file_id) {
-                 $all_data[] = $row;
-            }
+        foreach ($json_data_for_file as $index_in_file => $row) {
+            $global_sr_no_map[$current_global_sr_no] = [
+                'file_id' => $file_id,
+                'index_in_file_json' => $index_in_file
+            ];
+            $current_global_sr_no++;
         }
     }
+    $all_files_data[$file_id] = $json_data_for_file; // Store original parsed data per file_id
 }
 $stmt->close();
 
-
-$found = false;
-foreach ($all_data as $index => &$row) {
-    if (($index + 1) == $sr_no) {
-        $row[$field] = $value;
-        $found = true;
-        break;
-    }
+if (!isset($global_sr_no_map[$sr_no])) {
+    api_response(false, [], 'Record with specified sr_no not found.', 404);
 }
 
-if (!$found) {
-    api_response(false, [], 'Record with specified sr_no not found in the given file_id.', 404);
+$target_info = $global_sr_no_map[$sr_no];
+$target_file_id = $target_info['file_id'];
+$target_index_in_file_json = $target_info['index_in_file_json'];
+
+// Retrieve the specific file's JSON data from the $all_files_data (already fetched)
+// This avoids another DB query
+$target_file_json_data = $all_files_data[$target_file_id];
+
+if (!isset($target_file_json_data[$target_index_in_file_json])) {
+    api_response(false, [], 'Internal error: Target record not found in file JSON.', 500);
 }
+
+// Update the specific field
+$target_file_json_data[$target_index_in_file_json][$field] = $value;
 
 // Encode the modified data back to JSON
-$updated_json_text = json_encode($all_data, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+$updated_json_text_for_file = json_encode($target_file_json_data, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
 
-// Update the database
+// Update the database for the specific file_id
 $stmt = $conn->prepare("UPDATE csv_files SET json_text = ? WHERE id = ?");
-$stmt->bind_param("si", $updated_json_text, $file_id);
+$stmt->bind_param("si", $updated_json_text_for_file, $target_file_id);
 if ($stmt->execute()) {
     api_response(true, [], 'Record updated successfully.');
 } else {
