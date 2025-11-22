@@ -23,7 +23,17 @@ if (empty($api_key) || !defined('API_KEY') || $api_key !== API_KEY) {
     api_response(false, [], 'Unauthorized: Invalid or missing API key.', 401);
 }
 
-$stmt = $conn->prepare("SELECT id, json_text FROM csv_files");
+$sql = "SELECT id, json_text FROM csv_files";
+if (isset($_GET['id']) && is_numeric($_GET['id'])) {
+    $sql .= " WHERE id = ?";
+}
+
+$stmt = $conn->prepare($sql);
+
+if (isset($_GET['id']) && is_numeric($_GET['id'])) {
+    $stmt->bind_param("i", $_GET['id']);
+}
+
 $stmt->execute();
 $result = $stmt->get_result();
 
