@@ -24,12 +24,12 @@ if (empty($api_key) || !defined('API_KEY') || $api_key !== API_KEY) {
     api_response(false, [], 'Unauthorized: Invalid or missing API key.', 401);
 }
 
-$sr_no = $_POST['sr_no'] ?? null;
+$uid = $_POST['uid'] ?? null;
 $field = $_POST['field'] ?? null;
 $value = $_POST['value'] ?? null;
 
-if (empty($sr_no) || empty($field)) {
-    api_response(false, [], 'Missing required parameters: sr_no, field.', 400);
+if (empty($uid) || empty($field)) {
+    api_response(false, [], 'Missing required parameters: uid, field.', 400);
 }
 
 $all_files_data = [];
@@ -37,8 +37,8 @@ $stmt = $conn->prepare("SELECT id, json_text FROM csv_files ORDER BY id");
 $stmt->execute();
 $all_files_result = $stmt->get_result();
 
-$global_sr_no_map = [];
-$current_global_sr_no = 1;
+$global_uid_map = [];
+$current_global_uid = 1;
 
 while ($file = $all_files_result->fetch_assoc()) {
     $file_id = $file['id'];
@@ -46,22 +46,22 @@ while ($file = $all_files_result->fetch_assoc()) {
 
     if (json_last_error() === JSON_ERROR_NONE) {
         foreach ($json_data_for_file as $index_in_file => $row) {
-            $global_sr_no_map[$current_global_sr_no] = [
+            $global_uid_map[$current_global_uid] = [
                 'file_id' => $file_id,
                 'index_in_file_json' => $index_in_file
             ];
-            $current_global_sr_no++;
+            $current_global_uid++;
         }
     }
     $all_files_data[$file_id] = $json_data_for_file; // Store original parsed data per file_id
 }
 $stmt->close();
 
-if (!isset($global_sr_no_map[$sr_no])) {
-    api_response(false, [], 'Record with specified sr_no not found.', 404);
+if (!isset($global_uid_map[$uid])) {
+    api_response(false, [], 'Record with specified uid not found.', 404);
 }
 
-$target_info = $global_sr_no_map[$sr_no];
+$target_info = $global_uid_map[$uid];
 $target_file_id = $target_info['file_id'];
 $target_index_in_file_json = $target_info['index_in_file_json'];
 

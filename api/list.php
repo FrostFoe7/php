@@ -43,8 +43,8 @@ $conn->close();
 $serialized_data = [];
 $serial_number = 1;
 foreach ($all_data as $row) {
-    $row_with_sr_no = ['sr_no' => $serial_number] + $row;
-    $serialized_data[] = $row_with_sr_no;
+    $row_with_uid = ['uid' => $serial_number] + $row;
+    $serialized_data[] = $row_with_uid;
     $serial_number++;
 }
 
