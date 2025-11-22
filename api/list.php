@@ -23,7 +23,7 @@ if (empty($api_key) || !defined('API_KEY') || $api_key !== API_KEY) {
     api_response(false, [], 'Unauthorized: Invalid or missing API key.', 401);
 }
 
-$stmt = $conn->prepare("SELECT json_text FROM csv_files");
+$stmt = $conn->prepare("SELECT id, json_text FROM csv_files");
 $stmt->execute();
 $result = $stmt->get_result();
 
@@ -31,7 +31,8 @@ $all_data = [];
 while ($file = $result->fetch_assoc()) {
     $json_data = json_decode($file['json_text'], true);
     if (json_last_error() === JSON_ERROR_NONE) {
-        foreach ($json_data as $row) {
+        foreach ($json_data as &$row) {
+            $row['file_id'] = $file['id'];
             $all_data[] = $row;
         }
     }
