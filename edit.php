@@ -56,7 +56,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     exit;
 }
 
-$stmt = $conn->prepare("SELECT filename, json_text FROM csv_files WHERE id = ?");
+$stmt = $conn->prepare("SELECT filename, json_text, file_uuid FROM csv_files WHERE id = ?");
 $stmt->bind_param("i", $file_id);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -121,7 +121,10 @@ include_once __DIR__ . '/templates/header.php';
 
 <div class="mb-4">
     <h2 class="mb-2"><i class="bi bi-pencil-square"></i> Edit: <?php echo htmlspecialchars(substr($file['filename'], 0, 40)); ?></h2>
-    <span class="question-counter"><i class="bi bi-file-earmark-text"></i> <?php echo count($questions); ?> Questions</span>
+    <div>
+        <span class="question-counter"><i class="bi bi-file-earmark-text"></i> <?php echo count($questions); ?> Questions</span>
+        <span class="question-counter" style="margin-left: 0.5rem; background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);"><i class="bi bi-key"></i> UUID: <?php echo htmlspecialchars($file['file_uuid'] ?? 'N/A'); ?></span>
+    </div>
 </div>
 
 <form id="editForm" action="edit.php?id=<?php echo $file_id; ?>" method="post">

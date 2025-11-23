@@ -54,11 +54,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_FILES["csv_file"])) {
                 if (json_last_error() !== JSON_ERROR_NONE) {
                     $upload_error = "Error encoding data to JSON: " . json_last_error_msg();
                 } else {
-                    $stmt = $conn->prepare("INSERT INTO csv_files (filename, description, json_text, row_count, size_kb) VALUES (?, ?, ?, ?, ?)");
-                    $stmt->bind_param("sssid", $safe_filename, $description, $json_text, $row_count, $file_size_kb);
+                    // Generate file UUID in YYMMDDHHMI format
+                    $file_uuid = generateFileUUID($conn);
+                    
+                    $stmt = $conn->prepare("INSERT INTO csv_files (filename, description, json_text, row_count, size_kb, file_uuid) VALUES (?, ?, ?, ?, ?, ?)");
+                    $stmt->bind_param("sssiis", $safe_filename, $description, $json_text, $row_count, $file_size_kb, $file_uuid);
 
                     if ($stmt->execute()) {
-                        $_SESSION['message'] = "File '" . htmlspecialchars($safe_filename) . "' uploaded and processed successfully.";
+                        $_SESSION['message'] = "File '" . htmlspecialchars($safe_filename) . "' uploaded successfully. UUID: " . $file_uuid;
                         $_SESSION['message_type'] = "success";
                         header("Location: index.php");
                         exit;

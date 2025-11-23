@@ -39,7 +39,7 @@ if (isset($_POST['confirm']) && $_POST['confirm'] === 'yes') {
 }
 
 // Show confirmation page
-$stmt = $conn->prepare("SELECT filename, row_count, size_kb, created_at FROM csv_files WHERE id = ?");
+$stmt = $conn->prepare("SELECT filename, row_count, size_kb, file_uuid, created_at FROM csv_files WHERE id = ?");
 $stmt->bind_param("i", $file_id);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -122,6 +122,7 @@ include_once __DIR__ . '/templates/header.php';
             <h5><i class="bi bi-file-earmark"></i> File Details</h5>
             <hr>
             <p><strong>Filename:</strong> <code><?php echo htmlspecialchars($file['filename']); ?></code></p>
+            <p><strong>File UUID:</strong> <code><?php echo htmlspecialchars($file['file_uuid'] ?? 'N/A'); ?></code></p>
             <p><strong>Questions:</strong> <?php echo htmlspecialchars($file['row_count']); ?></p>
             <p><strong>File Size:</strong> <?php echo htmlspecialchars($file['size_kb']); ?> KB</p>
             <p><strong>Uploaded:</strong> <small><?php echo date("Y-m-d H:i:s", strtotime($file['created_at'])); ?></small></p>

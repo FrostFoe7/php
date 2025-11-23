@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/includes/session_check.php';
 
-$result = $conn->query("SELECT id, filename, description, row_count, size_kb, created_at FROM csv_files ORDER BY created_at DESC");
+$result = $conn->query("SELECT id, filename, description, row_count, size_kb, file_uuid, created_at FROM csv_files ORDER BY created_at DESC");
 
 include_once __DIR__ . '/templates/header.php';
 ?>

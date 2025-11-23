@@ -10,7 +10,7 @@ if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
 
 $file_id = (int)$_GET['id'];
 
-$stmt = $conn->prepare("SELECT filename, description, json_text, row_count, size_kb, created_at FROM csv_files WHERE id = ?");
+$stmt = $conn->prepare("SELECT filename, description, json_text, row_count, size_kb, file_uuid, created_at FROM csv_files WHERE id = ?");
 $stmt->bind_param("i", $file_id);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -96,7 +96,9 @@ include_once __DIR__ . '/templates/header.php';
         <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
             <div>
                 <h2 class="mb-0"><i class="bi bi-file-earmark-text"></i> <?php echo htmlspecialchars(substr($file['filename'], 0, 30)); ?></h2>
-                <p class="text-muted mb-0"><small>File ID: <?php echo $file_id; ?></small></p>
+                <p class="text-muted mb-0">
+                    <small>File ID: <?php echo $file_id; ?> | UUID: <code><?php echo htmlspecialchars($file['file_uuid'] ?? 'N/A'); ?></code></small>
+                </p>
             </div>
             <a href="index.php" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Back</a>
         </div>
