@@ -1,9 +1,13 @@
 <?php
+// Error handling first
+require_once __DIR__ . '/error-handler.php';
+
+// Session configuration
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
 
-define('DB_HOST', 's2bd-stable.whiteservers.net');
+define('DB_HOST', 'localhost');
 define('DB_USER', 'zxtfmwrs_zxtfmwrs');
 define('DB_PASS', 'ws;0V;5YG2p0Az');
 define('DB_NAME', 'zxtfmwrs_mnr_course');
@@ -14,16 +18,27 @@ define('ADMIN_USERNAME', 'admin');
 
 define('ADMIN_PASSWORD', 'password123');
 
-$conn = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
-
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
+// Database connection with error handling
+try {
+    $conn = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
+    
+    if ($conn->connect_error) {
+        throw new Exception("Database Connection Error: " . $conn->connect_error);
+    }
+    
+    $conn->set_charset("utf8mb4");
+    
+    // Enable error reporting
+    $conn->report_mode = MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT;
+    
+} catch (Exception $e) {
+    error_log("DB Error: " . $e->getMessage());
+    die("Database connection failed. Please check your credentials.");
 }
 
-$conn->set_charset("utf8mb4");
-
 error_reporting(E_ALL);
-ini_set('display_errors', 1);
+ini_set('display_errors', 0);
+ini_set('log_errors', 1);
 
 /**
  * Generate a unique file UUID in YYMMDDHHMI format
