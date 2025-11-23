@@ -27,52 +27,9 @@ $file_data = $result->fetch_assoc();
 $file_id = $file_data['id'];
 $stmt->close();
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $questions = $_POST['questions'] ?? [];
-    $new_data = [];
-
-    foreach ($questions as $index => $question) {
-        if (isset($question['delete']) && $question['delete'] == '1') {
-            continue;
-        }
-
-        $new_data[] = [
-            'questions' => $question['question'] ?? '',
-            'option1' => $question['option1'] ?? '',
-            'option2' => $question['option2'] ?? '',
-            'option3' => $question['option3'] ?? '',
-            'option4' => $question['option4'] ?? '',
-            'option5' => $question['option5'] ?? '',
-            'answer' => $question['answer'] ?? '',
-            'explanation' => $question['explanation'] ?? '',
-            'type' => $question['type'] ?? '',
-            'section' => $question['section'] ?? ''
-        ];
-    }
-
-    $row_count = count($new_data);
-    $json_text = json_encode($new_data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
-
-    if (json_last_error() !== JSON_ERROR_NONE) {
-        $_SESSION['message'] = "Error encoding data to JSON: " . json_last_error_msg();
-        $_SESSION['message_type'] = "danger";
-    } else {
-        $stmt = $conn->prepare("UPDATE csv_files SET json_text = ?, row_count = ? WHERE id = ?");
-        $stmt->bind_param("sii", $json_text, $row_count, $file_id);
-
-        if ($stmt->execute()) {
-            $_SESSION['message'] = "File updated successfully.";
-            $_SESSION['message_type'] = "success";
-        } else {
-            $_SESSION['message'] = "Database error on update: " . $stmt->error;
-            $_SESSION['message_type'] = "danger";
-        }
-        $stmt->close();
-    }
-    // Redirect back to the edit page to show changes
-    header("Location: edit.php?uuid=" . $file_uuid);
-    exit;
-}
+// Note: Form submission now handled via AJAX in client-side JavaScript
+// This prevents 403 issues with LiteSpeed Web Server
+// See the saveQuestions() function in the JavaScript section below
 
 $stmt = $conn->prepare("SELECT filename, json_text, file_uuid FROM csv_files WHERE id = ?");
 $stmt->bind_param("i", $file_id);
@@ -328,6 +285,110 @@ function addQuestion() {
     questionIndex++;
     // Scroll to new question
     newCard.scrollIntoView({ behavior: 'smooth' });
+}
+
+// AJAX handler for form submission (bypasses 403 issues)
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('editForm');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            saveQuestionsViaAjax();
+        });
+    }
+});
+
+async function saveQuestionsViaAjax() {
+    const form = document.getElementById('editForm');
+    const questions = [];
+    const container = document.getElementById('questions-container');
+    const questionCards = container.querySelectorAll('.card-question');
+    let index = 0;
+    
+    questionCards.forEach((card) => {
+        const deleteFlag = card.querySelector('input[name*="[delete]"]');
+        if (deleteFlag && deleteFlag.value === '1') {
+            return; // Skip deleted
+        }
+        
+        // Collect inputs from this card
+        const inputs = card.querySelectorAll('input[type="text"], textarea, select');
+        const questionData = {
+            delete: '0',
+            question: card.querySelector('textarea[name*="[question]"]')?.value || '',
+            option1: card.querySelector('input[name*="[option1]"]')?.value || '',
+            option2: card.querySelector('input[name*="[option2]"]')?.value || '',
+            option3: card.querySelector('input[name*="[option3]"]')?.value || '',
+            option4: card.querySelector('input[name*="[option4]"]')?.value || '',
+            option5: card.querySelector('input[name*="[option5]"]')?.value || '',
+            answer: card.querySelector('select[name*="[answer]"]')?.value || '',
+            explanation: card.querySelector('textarea[name*="[explanation]"]')?.value || '',
+            type: card.querySelector('input[name*="[type]"]')?.value || '',
+            section: card.querySelector('input[name*="[section]"]')?.value || ''
+        };
+        questions.push(questionData);
+    });
+    
+    // Get file UUID from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const fileUuid = urlParams.get('uuid');
+    
+    if (!fileUuid) {
+        alert('Error: File UUID not found');
+        return;
+    }
+    
+    // Show loading
+    const saveBtn = form.querySelector('button[type="submit"]');
+    const originalText = saveBtn.innerHTML;
+    saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
+    saveBtn.disabled = true;
+    
+    try {
+        const response = await fetch('/api/update-questions.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({
+                file_uuid: fileUuid,
+                questions: JSON.stringify(questions)
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showNotification('✓ ' + result.message, 'success', 3000);
+            saveBtn.innerHTML = originalText;
+            saveBtn.disabled = false;
+        } else {
+            showNotification('✗ ' + result.message, 'danger', 5000);
+            saveBtn.innerHTML = originalText;
+            saveBtn.disabled = false;
+        }
+    } catch (error) {
+        showNotification('✗ Error: ' + error.message, 'danger', 5000);
+        saveBtn.innerHTML = originalText;
+        saveBtn.disabled = false;
+    }
+}
+
+function showNotification(message, type, duration) {
+    const alert = document.createElement('div');
+    alert.className = `alert alert-${type} alert-dismissible fade show`;
+    alert.setAttribute('role', 'alert');
+    alert.style.position = 'fixed';
+    alert.style.top = '80px';
+    alert.style.right = '20px';
+    alert.style.zIndex = '9999';
+    alert.style.maxWidth = '400px';
+    alert.innerHTML = message + '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>';
+    document.body.appendChild(alert);
+    
+    if (duration > 0) {
+        setTimeout(() => alert.remove(), duration);
+    }
 }
 </script>
 
