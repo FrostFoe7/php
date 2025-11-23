@@ -9,9 +9,36 @@
  *   questions: JSON array of questions
  */
 
+// Set JSON response header FIRST before anything
 header('Content-Type: application/json; charset=utf-8');
 
-require_once __DIR__ . '/../includes/config.php';
+// Minimal config - no error handlers to avoid HTML output
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
+
+define('DB_HOST', 'localhost');
+define('DB_USER', 'zxtfmwrs_zxtfmwrs');
+define('DB_PASS', 'ws;0V;5YG2p0Az');
+define('DB_NAME', 'zxtfmwrs_mnr_course');
+
+// Connect to database
+try {
+    $conn = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
+    
+    if ($conn->connect_error) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'message' => 'Database connection failed']);
+        exit;
+    }
+    
+    $conn->set_charset("utf8mb4");
+    
+} catch (Exception $e) {
+    http_response_code(500);
+    echo json_encode(['success' => false, 'message' => 'Database error']);
+    exit;
+}
 
 // Verify session
 if (!isset($_SESSION['user_id'])) {
@@ -47,7 +74,7 @@ if (json_last_error() !== JSON_ERROR_NONE) {
 }
 
 // Look up file_id from UUID
-$stmt = $GLOBALS['conn']->prepare("SELECT id FROM csv_files WHERE file_uuid = ?");
+$stmt = $conn->prepare("SELECT id FROM csv_files WHERE file_uuid = ?");
 $stmt->bind_param("s", $file_uuid);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -93,10 +120,11 @@ if (json_last_error() !== JSON_ERROR_NONE) {
 }
 
 // Update database
-$stmt = $GLOBALS['conn']->prepare("UPDATE csv_files SET json_text = ?, row_count = ? WHERE id = ?");
+$stmt = $conn->prepare("UPDATE csv_files SET json_text = ?, row_count = ? WHERE id = ?");
 $stmt->bind_param("sii", $json_text, $row_count, $file_id);
 
 if ($stmt->execute()) {
+    http_response_code(200);
     echo json_encode([
         'success' => true,
         'message' => 'File updated successfully',
@@ -109,4 +137,5 @@ if ($stmt->execute()) {
 }
 
 $stmt->close();
+$conn->close();
 ?>

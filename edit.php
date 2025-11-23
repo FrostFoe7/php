@@ -356,7 +356,29 @@ async function saveQuestionsViaAjax() {
             })
         });
         
-        const result = await response.json();
+        // Check if response is ok
+        if (!response.ok) {
+            showNotification('✗ Server error: ' + response.status + ' ' + response.statusText, 'danger', 5000);
+            saveBtn.innerHTML = originalText;
+            saveBtn.disabled = false;
+            return;
+        }
+        
+        // Get response text first for debugging
+        const responseText = await response.text();
+        console.log('API Response:', responseText);
+        
+        let result;
+        try {
+            result = JSON.parse(responseText);
+        } catch (parseError) {
+            console.error('JSON Parse Error:', parseError);
+            console.error('Response was:', responseText);
+            showNotification('✗ Error: Invalid response from server (not JSON). Check console logs.', 'danger', 5000);
+            saveBtn.innerHTML = originalText;
+            saveBtn.disabled = false;
+            return;
+        }
         
         if (result.success) {
             showNotification('✓ ' + result.message, 'success', 3000);
@@ -368,6 +390,7 @@ async function saveQuestionsViaAjax() {
             saveBtn.disabled = false;
         }
     } catch (error) {
+        console.error('Fetch Error:', error);
         showNotification('✗ Error: ' + error.message, 'danger', 5000);
         saveBtn.innerHTML = originalText;
         saveBtn.disabled = false;
