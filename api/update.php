@@ -1,92 +1,101 @@
 <?php
-require_once __DIR__ . '/../includes/config.php';
-header('Content-Type: application/json');
+/**
+ * PUT /api/update.php
+ * Update single or multiple fields in a question
+ * Update options for a question
+ * 
+ * Usage (Form-urlencoded POST):
+ *   POST /api/update.php
+ *   key=frostfoe1337&uid=1&field=question&value=New Question Text
+ *   key=frostfoe1337&uid=1&field=option1&value=New Option
+ *   
+ * Usage (JSON POST):
+ *   POST /api/update.php
+ *   {
+ *     "key": "frostfoe1337",
+ *     "uid": 1,
+ *     "updates": {
+ *       "question": "New Question",
+ *       "description": "New Description",
+ *       "option1": "Option 1",
+ *       "correct": "A"
+ *     }
+ *   }
+ */
 
-function api_response($success, $data = [], $message = '', $statusCode = 200) {
-    http_response_code($statusCode);
-    $response = ['success' => $success];
-    if ($message) {
-        $response['message'] = $message;
-    }
-    if ($data) {
-        $response['data'] = $data;
-    }
-    echo json_encode($response, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
-    exit;
-}
+header('Content-Type: application/json; charset=utf-8');
+require_once __DIR__ . '/core.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    api_response(false, [], 'Invalid request method. Only POST is accepted.', 405);
+    APIResponse::error('Invalid request method. Only POST is accepted.', 405);
 }
 
-$api_key = $_POST['key'] ?? '';
-if (empty($api_key) || !defined('API_KEY') || $api_key !== API_KEY) {
-    api_response(false, [], 'Unauthorized: Invalid or missing API key.', 401);
-}
+// Handle both form-urlencoded and JSON payloads
+$input = $_POST;
 
-$uid = $_POST['uid'] ?? null;
-$field = $_POST['field'] ?? null;
-$value = $_POST['value'] ?? null;
-
-if (empty($uid) || empty($field)) {
-    api_response(false, [], 'Missing required parameters: uid, field.', 400);
-}
-
-$all_files_data = [];
-$stmt = $conn->prepare("SELECT id, json_text FROM csv_files ORDER BY id");
-$stmt->execute();
-$all_files_result = $stmt->get_result();
-
-$global_uid_map = [];
-$current_global_uid = 1;
-
-while ($file = $all_files_result->fetch_assoc()) {
-    $file_id = $file['id'];
-    $json_data_for_file = json_decode($file['json_text'], true);
-
-    if (json_last_error() === JSON_ERROR_NONE) {
-        foreach ($json_data_for_file as $index_in_file => $row) {
-            $global_uid_map[$current_global_uid] = [
-                'file_id' => $file_id,
-                'index_in_file_json' => $index_in_file
-            ];
-            $current_global_uid++;
+// If empty POST, try to parse JSON from request body
+if (empty($input)) {
+    $rawInput = file_get_contents('php://input');
+    if (!empty($rawInput)) {
+        $input = json_decode($rawInput, true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            APIResponse::error('Invalid JSON payload.', 400);
         }
     }
-    $all_files_data[$file_id] = $json_data_for_file; // Store original parsed data per file_id
-}
-$stmt->close();
-
-if (!isset($global_uid_map[$uid])) {
-    api_response(false, [], 'Record with specified uid not found.', 404);
 }
 
-$target_info = $global_uid_map[$uid];
-$target_file_id = $target_info['file_id'];
-$target_index_in_file_json = $target_info['index_in_file_json'];
+// Validate API key
+$apiKey = $input['key'] ?? '';
+APIValidator::validateApiKey($apiKey);
 
-// Retrieve the specific file's JSON data from the $all_files_data (already fetched)
-// This avoids another DB query
-$target_file_json_data = $all_files_data[$target_file_id];
+try {
+    $db = new QuestionDB();
 
-if (!isset($target_file_json_data[$target_index_in_file_json])) {
-    api_response(false, [], 'Internal error: Target record not found in file JSON.', 500);
+    $uid = $input['uid'] ?? null;
+    APIValidator::validateRequired(['uid' => $uid], ['uid']);
+    $uid = (int)$uid;
+
+    // Single field update (form-urlencoded)
+    if (isset($input['field']) && isset($input['value'])) {
+        $field = $input['field'];
+        $value = $input['value'];
+
+        $db->updateField($uid, $field, $value);
+        APIResponse::success(['uid' => $uid, 'field' => $field, 'value' => $value], 'Question field updated successfully.');
+
+    // Multiple fields update (JSON payload)
+    } elseif (isset($input['updates']) && is_array($input['updates'])) {
+        $updates = $input['updates'];
+
+        if (empty($updates)) {
+            APIResponse::error('No updates provided.', 400);
+        }
+
+        $db->updateMultipleFields($uid, $updates);
+        APIResponse::success(['uid' => $uid, 'updates' => $updates], 'Question updated successfully.');
+
+    // Update options specifically
+    } elseif (isset($input['options']) || isset($input['option1']) || isset($input['option2']) || isset($input['option3']) || isset($input['option4']) || isset($input['option5'])) {
+        $optionsData = [];
+
+        if (isset($input['options']) && is_array($input['options'])) {
+            $optionsData['options'] = $input['options'];
+        } else {
+            for ($i = 1; $i <= 5; $i++) {
+                if (isset($input['option' . $i])) {
+                    $optionsData['option' . $i] = $input['option' . $i];
+                }
+            }
+        }
+
+        $db->updateOptions($uid, $optionsData);
+        APIResponse::success(['uid' => $uid, 'options_updated' => array_keys($optionsData)], 'Question options updated successfully.');
+
+    } else {
+        APIResponse::error('Missing update parameters. Provide either (field + value), updates object, or options.', 400);
+    }
+
+} catch (Exception $e) {
+    APIResponse::error('Internal server error: ' . $e->getMessage(), 500);
 }
-
-// Update the specific field
-$target_file_json_data[$target_index_in_file_json][$field] = $value;
-
-// Encode the modified data back to JSON
-$updated_json_text_for_file = json_encode($target_file_json_data, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
-
-// Update the database for the specific file_id
-$stmt = $conn->prepare("UPDATE csv_files SET json_text = ? WHERE id = ?");
-$stmt->bind_param("si", $updated_json_text_for_file, $target_file_id);
-if ($stmt->execute()) {
-    api_response(true, [], 'Record updated successfully.');
-} else {
-    api_response(false, [], 'Failed to update record in the database.', 500);
-}
-
-$stmt->close();
-$conn->close();
+?>

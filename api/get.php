@@ -1,49 +1,78 @@
 <?php
-require_once __DIR__ . '/../includes/config.php';
-header('Content-Type: application/json');
+/**
+ * GET /api/get.php
+ * Fetches specific file or single question by uid
+ * 
+ * Usage:
+ *   GET /api/get.php?key=frostfoe1337&file_id=1
+ *   GET /api/get.php?key=frostfoe1337&uid=5
+ */
 
-function api_response($success, $data = [], $message = '', $statusCode = 200) {
-    http_response_code($statusCode);
-    if ($success && isset($data['data'])) {
-        // Return only the data array for successful responses
-        echo json_encode($data['data'], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
-    } else {
-        // Return error response with success and message
-        $response = ['success' => $success];
-        if ($message) {
-            $response['message'] = $message;
+header('Content-Type: application/json; charset=utf-8');
+require_once __DIR__ . '/core.php';
+
+// Validate API key
+$apiKey = $_GET['key'] ?? '';
+APIValidator::validateApiKey($apiKey);
+
+try {
+    $db = new QuestionDB();
+
+    if (isset($_GET['uid'])) {
+        // Get single question by uid
+        $uid = (int)$_GET['uid'];
+        $question = $db->getQuestionByUid($uid);
+
+        if (!$question) {
+            APIResponse::error('Question with uid ' . $uid . ' not found.', 404);
         }
-        echo json_encode($response, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+
+        APIResponse::success(['question' => $question]);
+
+    } elseif (isset($_GET['file_id'])) {
+        // Get single file by ID
+        $fileId = (int)$_GET['file_id'];
+        
+        $stmt = $GLOBALS['conn']->prepare("SELECT id, filename, description, row_count FROM csv_files WHERE id = ?");
+        $stmt->bind_param("i", $fileId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        if ($result->num_rows === 0) {
+            APIResponse::error('File not found.', 404);
+        }
+
+        $file = $result->fetch_assoc();
+        $stmt->close();
+
+        // Get file's questions
+        $mapData = $db->getGlobalUidMap();
+        $globalUidMap = $mapData['uid_map'];
+        $allFilesData = $mapData['files_data'];
+
+        $questions = [];
+        foreach ($globalUidMap as $uid => $info) {
+            if ($info['file_id'] === $fileId) {
+                $indexInFile = $info['index_in_file'];
+                if (isset($allFilesData[$fileId][$indexInFile])) {
+                    $question = $allFilesData[$fileId][$indexInFile];
+                    $question['uid'] = $uid;
+                    $question['file_id'] = $fileId;
+                    $questions[] = $question;
+                }
+            }
+        }
+
+        $file['questions'] = $questions;
+        $file['question_count'] = count($questions);
+
+        APIResponse::success(['file' => $file]);
+
+    } else {
+        APIResponse::error('Missing required parameter: uid or file_id', 400);
     }
-    exit;
+
+} catch (Exception $e) {
+    APIResponse::error('Internal server error: ' . $e->getMessage(), 500);
 }
-
-$api_key = $_GET['key'] ?? '';
-if (empty($api_key) || !defined('API_KEY') || $api_key !== API_KEY) {
-    api_response(false, [], 'Unauthorized: Invalid or missing API key.', 401);
-}
-
-if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
-    api_response(false, [], 'Bad Request: Invalid or missing file ID.', 400);
-}
-$file_id = (int)$_GET['id'];
-
-$stmt = $conn->prepare("SELECT id, filename, row_count, json_text FROM csv_files WHERE id = ?");
-$stmt->bind_param("i", $file_id);
-$stmt->execute();
-$result = $stmt->get_result();
-
-if ($result->num_rows === 0) {
-    api_response(false, [], 'Not Found: File with the given ID does not exist.', 404);
-}
-
-$file = $result->fetch_assoc();
-$stmt->close();
-$conn->close();
-
-$json_data = json_decode($file['json_text'], true);
-if (json_last_error() !== JSON_ERROR_NONE) {
-    api_response(false, [], 'Internal Server Error: Failed to parse stored JSON data.', 500);
-}
-
-api_response(true, ['data' => $json_data], '');
+?>

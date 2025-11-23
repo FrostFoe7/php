@@ -1,61 +1,70 @@
 <?php
-require_once __DIR__ . '/../includes/config.php';
-header('Content-Type: application/json');
+/**
+ * GET /api/list.php
+ * Fetches all questions with uid mapping
+ * Optional filter by file ID
+ * 
+ * Usage:
+ *   GET /api/list.php?key=frostfoe1337
+ *   GET /api/list.php?key=frostfoe1337&file_id=1
+ */
 
-function api_response($success, $data = [], $message = '', $statusCode = 200) {
-    http_response_code($statusCode);
-    if ($success && isset($data['data'])) {
-        // Return only the data array for successful responses
-        echo json_encode($data['data'], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+header('Content-Type: application/json; charset=utf-8');
+require_once __DIR__ . '/core.php';
+
+// Validate API key
+$apiKey = $_GET['key'] ?? '';
+APIValidator::validateApiKey($apiKey);
+
+try {
+    $db = new QuestionDB();
+
+    $fileId = isset($_GET['file_id']) ? (int)$_GET['file_id'] : null;
+
+    if ($fileId) {
+        // Get specific file's questions
+        $stmt = $GLOBALS['conn']->prepare("SELECT json_text FROM csv_files WHERE id = ?");
+        $stmt->bind_param("i", $fileId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        if ($result->num_rows === 0) {
+            APIResponse::error('File not found.', 404);
+        }
+
+        $file = $result->fetch_assoc();
+        $stmt->close();
+
+        $jsonData = json_decode($file['json_text'], true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            APIResponse::error('Failed to parse file JSON.', 500);
+        }
+
+        // Add uid and file_id to each question
+        $questions = [];
+        $mapData = $db->getGlobalUidMap();
+        $globalUidMap = $mapData['uid_map'];
+
+        foreach ($globalUidMap as $uid => $info) {
+            if ($info['file_id'] === $fileId) {
+                $indexInFile = $info['index_in_file'];
+                if (isset($jsonData[$indexInFile])) {
+                    $question = $jsonData[$indexInFile];
+                    $question['uid'] = $uid;
+                    $question['file_id'] = $fileId;
+                    $questions[] = $question;
+                }
+            }
+        }
+
+        APIResponse::success(['questions' => $questions, 'total' => count($questions), 'file_id' => $fileId]);
     } else {
-        // Return error response with success and message
-        $response = ['success' => $success];
-        if ($message) {
-            $response['message'] = $message;
-        }
-        echo json_encode($response, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+        // Get all questions
+        $allQuestions = $db->getAllQuestions();
+        APIResponse::success(['questions' => $allQuestions, 'total' => count($allQuestions)]);
     }
-    exit;
+
+} catch (Exception $e) {
+    APIResponse::error('Internal server error: ' . $e->getMessage(), 500);
 }
-
-$api_key = $_GET['key'] ?? '';
-if (empty($api_key) || !defined('API_KEY') || $api_key !== API_KEY) {
-    api_response(false, [], 'Unauthorized: Invalid or missing API key.', 401);
-}
-
-$sql = "SELECT id, json_text FROM csv_files";
-if (isset($_GET['id']) && is_numeric($_GET['id'])) {
-    $sql .= " WHERE id = ?";
-}
-
-$stmt = $conn->prepare($sql);
-
-if (isset($_GET['id']) && is_numeric($_GET['id'])) {
-    $stmt->bind_param("i", $_GET['id']);
-}
-
-$stmt->execute();
-$result = $stmt->get_result();
-
-$all_data = [];
-while ($file = $result->fetch_assoc()) {
-    $json_data = json_decode($file['json_text'], true);
-    if (json_last_error() === JSON_ERROR_NONE) {
-        foreach ($json_data as &$row) {
-            $row['file_id'] = $file['id'];
-            $all_data[] = $row;
-        }
-    }
-}
-$stmt->close();
-$conn->close();
-
-$serialized_data = [];
-$serial_number = 1;
-foreach ($all_data as $row) {
-    $row_with_uid = ['uid' => $serial_number] + $row;
-    $serialized_data[] = $row_with_uid;
-    $serial_number++;
-}
-
-api_response(true, ['data' => $serialized_data], '');
+?>
