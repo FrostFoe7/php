@@ -23,33 +23,22 @@ try {
 
     if ($fileId) {
         // Get specific file's questions
-        $stmt = $GLOBALS['conn']->prepare("SELECT json_text FROM csv_files WHERE id = ?");
-        $stmt->bind_param("i", $fileId);
-        $stmt->execute();
-        $result = $stmt->get_result();
+        $mapData = $db->getGlobalUidMap();
+        $globalUidMap = $mapData['uid_map'];
+        $allFilesData = $mapData['files_data'];
 
-        if ($result->num_rows === 0) {
+        // Verify file exists
+        if (!isset($allFilesData[$fileId])) {
             APIResponse::error('File not found.', 404);
-        }
-
-        $file = $result->fetch_assoc();
-        $stmt->close();
-
-        $jsonData = json_decode($file['json_text'], true);
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            APIResponse::error('Failed to parse file JSON.', 500);
         }
 
         // Add uid and file_id to each question
         $questions = [];
-        $mapData = $db->getGlobalUidMap();
-        $globalUidMap = $mapData['uid_map'];
-
         foreach ($globalUidMap as $uid => $info) {
             if ($info['file_id'] === $fileId) {
                 $indexInFile = $info['index_in_file'];
-                if (isset($jsonData[$indexInFile])) {
-                    $question = $jsonData[$indexInFile];
+                if (isset($allFilesData[$fileId][$indexInFile])) {
+                    $question = $allFilesData[$fileId][$indexInFile];
                     $question['uid'] = $uid;
                     $question['file_id'] = $fileId;
                     $questions[] = $question;
