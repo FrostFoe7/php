@@ -121,3 +121,84 @@ $questions = $q_stmt->fetchAll();
 </form>
 
 <?php include 'templates/footer.php'; ?>
+
+<script>
+// AJAX fallback to bypass LiteSpeed/ModSecurity 403 on large POST bodies
+// Intercepts the normal form submission and sends JSON to file-save.php
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('editForm');
+    if (!form) return;
+
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const submitBtn = form.querySelector('button[type="submit"]');
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Saving...';
+        }
+
+        const csrf = form.querySelector('input[name="csrf_token"]').value;
+        const questionCards = form.querySelectorAll('.card');
+        const data = { file_id: '<?php echo $file['id']; ?>', csrf_token: csrf, questions: {} };
+
+        questionCards.forEach(card => {
+            const header = card.querySelector('.card-header');
+            if (!header) return;
+            const idMatch = header.textContent.match(/ID:\s*([0-9a-fA-F-]{36})/);
+            if (!idMatch) return;
+            const qid = idMatch[1];
+            const scope = card;
+            const getVal = sel => {
+                const el = scope.querySelector(sel);
+                return el ? el.value : '';
+            };
+            data.questions[qid] = {
+                question_text: getVal(`textarea[name="questions[${qid}][question_text]"]`),
+                option1: getVal(`textarea[name="questions[${qid}][option1]"]`),
+                option2: getVal(`textarea[name="questions[${qid}][option2]"]`),
+                option3: getVal(`textarea[name="questions[${qid}][option3]"]`),
+                option4: getVal(`textarea[name="questions[${qid}][option4]"]`),
+                option5: getVal(`textarea[name="questions[${qid}][option5]"]`),
+                answer: getVal(`input[name="questions[${qid}][answer]"]`),
+                explanation: getVal(`textarea[name="questions[${qid}][explanation]"]`),
+                type: getVal(`input[name="questions[${qid}][type]"]`),
+                section: getVal(`input[name="questions[${qid}][section]"]`)
+            };
+        });
+
+        fetch('file-save.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        })
+        .then(r => r.text())
+        .then(txt => {
+            let json;
+            try { json = JSON.parse(txt); } catch { json = { error: 'Invalid JSON response', raw: txt }; }
+            if (json.success) {
+                showNotice('Saved Successfully (' + json.updated + ' updated)', 'success');
+            } else {
+                showNotice('Save failed: ' + (json.error || 'Unknown error'), 'danger');
+            }
+        })
+        .catch(err => {
+            showNotice('Network error: ' + err.message, 'danger');
+        })
+        .finally(() => {
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Save All Changes';
+            }
+        });
+    });
+
+    function showNotice(message, type) {
+        const div = document.createElement('div');
+        div.className = 'alert alert-' + type + ' position-fixed top-0 end-0 m-3 shadow';
+        div.style.zIndex = 2000;
+        div.textContent = message;
+        document.body.appendChild(div);
+        setTimeout(() => div.remove(), 4000);
+    }
+});
+</script>
