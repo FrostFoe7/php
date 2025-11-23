@@ -1,9 +1,14 @@
 /* FILE: public_html/templates/footer.php */
-</div>
+    </div>
 
-<footer class="footer mt-auto py-3 bg-light">
-    <div class="container text-center">
-        <span class="text-muted">CSV Management System &copy; <?php echo date("Y"); ?></span>
+<footer class="footer mt-auto py-4 bg-light border-top">
+    <div class="container-fluid">
+        <div class="row text-center text-muted">
+            <div class="col-12">
+                <p class="mb-2"><small>📚 Course MNR World - Admin Dashboard</small></p>
+                <p class="mb-0"><small>&copy; <?php echo date("Y"); ?> | Powered by PHP + MySQL</small></p>
+            </div>
+        </div>
     </div>
 </footer>
 
@@ -11,3 +16,4 @@
 
 </body>
 </html>
+
