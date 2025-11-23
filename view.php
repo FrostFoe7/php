@@ -1,17 +1,17 @@
 <?php
 require_once __DIR__ . '/includes/session_check.php';
 
-if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
-    $_SESSION['message'] = "Invalid file ID.";
+$file_uuid = trim($_GET['uuid'] ?? '');
+
+if ($file_uuid === '' || !is_numeric($file_uuid) || strlen($file_uuid) != 10) {
+    $_SESSION['message'] = "Invalid file UUID format.";
     $_SESSION['message_type'] = "danger";
     header("Location: index.php");
     exit;
 }
 
-$file_id = (int)$_GET['id'];
-
-$stmt = $conn->prepare("SELECT filename, description, json_text, row_count, size_kb, file_uuid, created_at FROM csv_files WHERE id = ?");
-$stmt->bind_param("i", $file_id);
+$stmt = $conn->prepare("SELECT id, filename, description, json_text, row_count, size_kb, file_uuid, created_at FROM csv_files WHERE file_uuid = ?");
+$stmt->bind_param("s", $file_uuid);
 $stmt->execute();
 $result = $stmt->get_result();
 

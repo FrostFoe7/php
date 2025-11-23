@@ -1,13 +1,31 @@
 <?php
 require_once __DIR__ . '/includes/session_check.php';
 
-if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
-    $_SESSION['message'] = "Invalid file ID.";
+$file_uuid = trim($_GET['uuid'] ?? '');
+
+if ($file_uuid === '' || !is_numeric($file_uuid) || strlen($file_uuid) != 10) {
+    $_SESSION['message'] = "Invalid file UUID format.";
     $_SESSION['message_type'] = "danger";
     header("Location: index.php");
     exit;
 }
-$file_id = (int)$_GET['id'];
+
+// Look up internal file_id from UUID
+$stmt = $GLOBALS['conn']->prepare("SELECT id FROM csv_files WHERE file_uuid = ?");
+$stmt->bind_param("s", $file_uuid);
+$stmt->execute();
+$result = $stmt->get_result();
+
+if ($result->num_rows === 0) {
+    $_SESSION['message'] = "File not found.";
+    $_SESSION['message_type'] = "danger";
+    header("Location: index.php");
+    exit;
+}
+
+$file_data = $result->fetch_assoc();
+$file_id = $file_data['id'];
+$stmt->close();
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $questions = $_POST['questions'] ?? [];
@@ -52,7 +70,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stmt->close();
     }
     // Redirect back to the edit page to show changes
-    header("Location: edit.php?id=" . $file_id);
+    header("Location: edit.php?uuid=" . $file_uuid);
     exit;
 }
 
@@ -127,7 +145,7 @@ include_once __DIR__ . '/templates/header.php';
     </div>
 </div>
 
-<form id="editForm" action="edit.php?id=<?php echo $file_id; ?>" method="post">
+<form id="editForm" action="edit.php?uuid=<?php echo $file_uuid; ?>" method="post">
     <div class="form-controls">
         <a href="index.php" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Back</a>
         <button type="button" class="btn btn-primary" onclick="addQuestion()"><i class="bi bi-plus-circle"></i> Add Question</button>

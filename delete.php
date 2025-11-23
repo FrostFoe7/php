@@ -1,24 +1,32 @@
 <?php
 require_once __DIR__ . '/includes/session_check.php';
 
-if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
-    $_SESSION['message'] = "Invalid file ID.";
+$file_uuid = trim($_GET['uuid'] ?? '');
+
+if ($file_uuid === '' || !is_numeric($file_uuid) || strlen($file_uuid) != 10) {
+    $_SESSION['message'] = "Invalid file UUID format.";
     $_SESSION['message_type'] = "danger";
     header("Location: index.php");
     exit;
 }
 
-$file_id = (int)$_GET['id'];
-
 // Check if confirmation is given
 if (isset($_POST['confirm']) && $_POST['confirm'] === 'yes') {
-    $stmt_select = $conn->prepare("SELECT filename FROM csv_files WHERE id = ?");
-    $stmt_select->bind_param("i", $file_id);
+    $stmt_select = $conn->prepare("SELECT filename, id FROM csv_files WHERE file_uuid = ?");
+    $stmt_select->bind_param("s", $file_uuid);
     $stmt_select->execute();
     $result = $stmt_select->get_result();
     $file = $result->fetch_assoc();
     $filename = $file ? $file['filename'] : 'the file';
+    $file_id = $file ? $file['id'] : null;
     $stmt_select->close();
+
+    if (!$file_id) {
+        $_SESSION['message'] = "File not found.";
+        $_SESSION['message_type'] = "danger";
+        header("Location: index.php");
+        exit;
+    }
 
     $stmt_delete = $conn->prepare("DELETE FROM csv_files WHERE id = ?");
     $stmt_delete->bind_param("i", $file_id);
@@ -39,8 +47,8 @@ if (isset($_POST['confirm']) && $_POST['confirm'] === 'yes') {
 }
 
 // Show confirmation page
-$stmt = $conn->prepare("SELECT filename, row_count, size_kb, file_uuid, created_at FROM csv_files WHERE id = ?");
-$stmt->bind_param("i", $file_id);
+$stmt = $conn->prepare("SELECT filename, row_count, size_kb, file_uuid, created_at FROM csv_files WHERE file_uuid = ?");
+$stmt->bind_param("s", $file_uuid);
 $stmt->execute();
 $result = $stmt->get_result();
 

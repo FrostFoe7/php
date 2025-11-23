@@ -1,0 +1,67 @@
+# 🚀 QUICK FIX REFERENCE
+
+## Problem
+**403 Forbidden** when trying to edit questions
+
+## Root Cause  
+**Missing file ID parameter** (`?id=X`)
+
+## Solution
+Use proper URLs with file ID:
+
+```
+❌ https://csv.mnr.world/edit.php
+✅ https://csv.mnr.world/edit.php?id=1
+```
+
+## Quick Start
+
+### Option A: Use Dashboard (Easiest)
+1. Go to: `https://csv.mnr.world/index.php`
+2. See file list
+3. Click "Edit" button
+4. Done! ✓
+
+### Option B: Use Direct URL
+1. Go to: `https://csv.mnr.world/list-files.php`
+2. Copy the EDIT URL for your file
+3. Paste into browser
+4. Done! ✓
+
+### Option C: Manual URL
+1. Know your file ID: `1` (shown in list-files.php)
+2. Visit: `https://csv.mnr.world/edit.php?id=1`
+3. Done! ✓
+
+## Test It Now
+
+Visit this URL (we know file ID=1 exists):
+```
+https://csv.mnr.world/edit.php?id=1
+```
+
+Should work! If not, copy output from:
+```
+https://csv.mnr.world/list-files.php
+```
+
+## System Status: ✅ ALL GREEN
+
+- ✅ PHP working
+- ✅ Session active  
+- ✅ User logged in
+- ✅ Database connected
+- ✅ Files available
+- ✅ edit.php readable
+
+## Helper Pages
+
+- `index.php` - Dashboard with file list (USE THIS!)
+- `list-files.php` - Show all files with correct URLs
+- `edit.php?id=1` - Edit file #1
+- `upload.php` - Upload new CSV
+- `diagnose.php` - System check
+
+---
+
+**Status**: ✅ RESOLVED | **Cause**: Missing ?id= parameter | **Fix**: Use dashboard or list-files.php

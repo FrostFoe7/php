@@ -109,9 +109,9 @@ include_once __DIR__ . '/templates/header.php';
                                 <td><small><?php echo date("M d, Y H:i", strtotime($row['created_at'])); ?></small></td>
                                 <td>
                                     <div class="action-buttons">
-                                        <a href="view.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-info" title="View"><i class="bi bi-eye"></i> View</a>
-                                        <a href="edit.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning" title="Edit"><i class="bi bi-pencil-square"></i> Edit</a>
-                                        <a href="delete.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-danger" title="Delete" onclick="return confirm('Are you sure?');"><i class="bi bi-trash"></i> Delete</a>
+                                        <a href="view.php?uuid=<?php echo htmlspecialchars($row['file_uuid']); ?>" class="btn btn-sm btn-info" title="View"><i class="bi bi-eye"></i> View</a>
+                                        <a href="edit.php?uuid=<?php echo htmlspecialchars($row['file_uuid']); ?>" class="btn btn-sm btn-warning" title="Edit"><i class="bi bi-pencil-square"></i> Edit</a>
+                                        <a href="delete.php?uuid=<?php echo htmlspecialchars($row['file_uuid']); ?>" class="btn btn-sm btn-danger" title="Delete" onclick="return confirm('Are you sure?');"><i class="bi bi-trash"></i> Delete</a>
                                     </div>
                                 </td>
                             </tr>
