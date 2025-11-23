@@ -71,6 +71,11 @@ try {
         }
     }
 
+    // Ensure all questions in the file are included in the order
+    if (count($order) !== count($fileQuestions)) {
+        APIResponse::error('Order array must contain all questions in the file. Expected ' . count($fileQuestions) . ' uids, got ' . count($order) . '.', 400);
+    }
+
     // Reorder questions
     $reorderedQuestions = [];
     foreach ($order as $uid) {

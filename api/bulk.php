@@ -140,8 +140,8 @@ try {
         
         foreach ($questions as $index => $questionData) {
             try {
-                if (empty($questionData['question'])) {
-                    throw new Exception('Question text is required');
+                if (empty($questionData['question']) && empty($questionData['questions'])) {
+                    throw new Exception('Question text is required (field: question or questions)');
                 }
 
                 $db->addQuestion($fileId, $questionData);

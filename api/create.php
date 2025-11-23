@@ -51,13 +51,14 @@ try {
     APIValidator::validateRequired(['file_id' => $fileId], ['file_id']);
     $fileId = (int)$fileId;
 
-    // Required fields for a question
-    $requiredFields = ['question'];
-    APIValidator::validateRequired($input, $requiredFields);
+    // Required fields for a question (accept either 'question' or 'questions')
+    if (empty($input['question']) && empty($input['questions'])) {
+        APIResponse::error('Question text is required (field: question or questions).', 400);
+    }
 
     // Extract question data
     $questionData = [];
-    $allowedFields = ['question', 'description', 'option1', 'option2', 'option3', 'option4', 'option5', 'correct', 'explanation', 'category', 'difficulty', 'tags'];
+    $allowedFields = ['question', 'questions', 'description', 'option1', 'option2', 'option3', 'option4', 'option5', 'correct', 'answer', 'explanation', 'category', 'difficulty', 'tags', 'type', 'section'];
     
     foreach ($allowedFields as $field) {
         if (isset($input[$field])) {
@@ -65,11 +66,10 @@ try {
         }
     }
 
-    // Ensure question field exists
-    if (empty($questionData['question'])) {
-        APIResponse::error('Question text is required.', 400);
-    }
-
+    // Normalize question field if needed
+    // If 'question' is provided but not 'questions', and we want to support both, we keep what is provided.
+    // But we should ensure at least one exists.
+    
     $db->addQuestion($fileId, $questionData);
 
     // Get the new uid
