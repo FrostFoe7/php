@@ -1,9 +1,9 @@
 <?php
 // Database Configuration
 define('DB_HOST', 'localhost');
-define('DB_NAME', 'mnr_question_bank');
-define('DB_USER', 'root'); // Change for cPanel
-define('DB_PASS', '');     // Change for cPanel
+define('DB_NAME', 'zxtfmwrs_mnr_course');
+define('DB_USER', 'zxtfmwrs_zxtfmwrs');
+define('DB_PASS', 'ws;0V;5YG2p0Az');
 define('DB_CHARSET', 'utf8mb4');
 
 // App Configuration
