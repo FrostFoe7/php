@@ -19,9 +19,19 @@ APIValidator::validateApiKey($apiKey);
 try {
     $db = new QuestionDB();
 
-    $fileId = isset($_GET['file_id']) ? (int)$_GET['file_id'] : null;
+    // Validate and parse file_id parameter
+    $fileId = null;
+    if (isset($_GET['file_id'])) {
+        $fileId = (int)$_GET['file_id'];
+        // Validate file_id is non-negative
+        if ($fileId < 0) {
+            APIResponse::error('Invalid file_id: must be non-negative.', 400);
+            exit;
+        }
+    }
 
-    if ($fileId) {
+    // Use !== null to handle file_id = 0 correctly
+    if ($fileId !== null) {
         // Get specific file's questions
         $mapData = $db->getGlobalUidMap();
         $globalUidMap = $mapData['uid_map'];
@@ -30,6 +40,7 @@ try {
         // Verify file exists
         if (!isset($allFilesData[$fileId])) {
             APIResponse::error('File not found.', 404);
+            exit;
         }
 
         // Add uid and file_id to each question
@@ -47,13 +58,18 @@ try {
         }
 
         APIResponse::success(['questions' => $questions, 'total' => count($questions), 'file_id' => $fileId]);
+        exit;
     } else {
         // Get all questions
         $allQuestions = $db->getAllQuestions();
         APIResponse::success(['questions' => $allQuestions, 'total' => count($allQuestions)]);
+        exit;
     }
 
 } catch (Exception $e) {
-    APIResponse::error('Internal server error: ' . $e->getMessage(), 500);
+    // Log internal error details (don't expose to client)
+    error_log('API Error in list.php: ' . $e->getMessage());
+    APIResponse::error('Internal server error.', 500);
+    exit;
 }
 ?>
