@@ -1,13 +1,13 @@
 body {
-    background-color: #f8f9fa;
+  background-color: #f8f9fa;
 }
 .card {
-    margin-bottom: 20px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  margin-bottom: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 .navbar-brand {
-    font-weight: bold;
+  font-weight: bold;
 }
 textarea {
-    resize: vertical;
+  resize: vertical;
 }

@@ -1,5 +1,50 @@
 <?php
-function parseCSV($filepath) {
+/**
+ * Detect if answers are 0-indexed (start from 0)
+ * Checks if answer values contain 0 but no values >= option_count
+ */
+function detectZeroIndexedAnswers($questions) {
+    if (empty($questions)) return false;
+    
+    $has_zero = false;
+    $max_option_value = 0;
+    
+    foreach ($questions as $q) {
+        $answer = trim($q['answer']);
+        
+        // Check if answer is numeric
+        if (is_numeric($answer)) {
+            $answer_val = (int)$answer;
+            
+            if ($answer_val === 0) {
+                $has_zero = true;
+            }
+            
+            $max_option_value = max($max_option_value, $answer_val);
+        }
+    }
+    
+    // If we found zeros and max value is 3 or less (0,1,2,3 format for 4 options)
+    // then it's likely 0-indexed
+    return $has_zero && $max_option_value <= 3;
+}
+
+/**
+ * Convert 0-indexed answers to 1-indexed
+ * 0 -> 1, 1 -> 2, etc.
+ */
+function convertAnswersFromZeroToOne(&$questions) {
+    foreach ($questions as &$q) {
+        $answer = trim($q['answer']);
+        
+        if (is_numeric($answer)) {
+            $answer_val = (int)$answer;
+            $q['answer'] = (string)($answer_val + 1);
+        }
+    }
+}
+
+function parseCSV($filepath, $forceConvert = false) {
     $questions = [];
     
     // Detect encoding and convert to UTF-8 if needed
@@ -86,6 +131,13 @@ function parseCSV($filepath) {
         }
         fclose($handle);
     }
+    
+    // Auto-detect or force convert 0-indexed answers to 1-indexed
+    $shouldConvert = $forceConvert || detectZeroIndexedAnswers($questions);
+    if ($shouldConvert) {
+        convertAnswersFromZeroToOne($questions);
+    }
+    
     return $questions;
 }
 ?>
