@@ -11,3 +11,43 @@ body {
 textarea {
   resize: vertical;
 }
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+  .card {
+    margin-bottom: 15px;
+  }
+  h1, .h1 {
+    font-size: 2rem;
+  }
+  h2, .h2 {
+    font-size: 1.75rem;
+  }
+  h3, .h3 {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .card {
+    margin-bottom: 10px;
+  }
+  h1, .h1 {
+    font-size: 1.75rem;
+  }
+  h2, .h2 {
+    font-size: 1.5rem;
+  }
+  h3, .h3 {
+    font-size: 1.25rem;
+  }
+  .navbar-nav {
+    text-align: center;
+  }
+  .form-group {
+    margin-bottom: 1rem;
+  }
+  .btn {
+    width: 100%;
+  }
+}

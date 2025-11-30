@@ -113,7 +113,7 @@ if ($sort_by === 'category') {
                 <?php endif; ?>
             </h4>
             
-            <table class="table table-striped table-sm">
+            <table class="table table-striped table-sm table-responsive">
                 <thead>
                     <tr>
                         <th>Name</th>
@@ -149,7 +149,7 @@ if ($sort_by === 'category') {
 
 <?php else: ?>
     <!-- Regular List View -->
-    <table class="table table-striped">
+    <table class="table table-striped table-responsive">
         <thead>
             <tr>
                 <th>Name</th>
