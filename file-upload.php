@@ -6,6 +6,20 @@ $error = '';
 $success = '';
 $warning = '';
 $answer_conversion_applied = false;
+$merge_file_id = $_GET['merge'] ?? null;
+$merge_file = null;
+
+// If merging, verify the file exists
+if ($merge_file_id) {
+    $merge_stmt = $pdo->prepare("SELECT * FROM files WHERE id = ?");
+    $merge_stmt->execute([$merge_file_id]);
+    $merge_file = $merge_stmt->fetch();
+    
+    if (!$merge_file) {
+        $merge_file_id = null;
+        $error = "File not found for merging.";
+    }
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
     verifyCsrfToken($_POST['csrf_token'] ?? '');
@@ -39,13 +53,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
                 } else {
                     $pdo->beginTransaction();
 
-                    $file_id = uuidv4();
-                    $stmt = $pdo->prepare("INSERT INTO files (id, original_filename, total_questions) VALUES (?, ?, ?)");
-                    $stmt->execute([$file_id, $file['name'], count($questions)]);
+                    $file_id = $merge_file_id;
+                    $is_merge = !empty($merge_file_id);
+
+                    if (!$is_merge) {
+                        // Create new file
+                        $file_id = uuidv4();
+                        $stmt = $pdo->prepare("INSERT INTO files (id, original_filename, total_questions) VALUES (?, ?, ?)");
+                        $stmt->execute([$file_id, $file['name'], count($questions)]);
+                    } else {
+                        // Get current max order_index for merging
+                        $max_stmt = $pdo->prepare("SELECT MAX(order_index) as max_index FROM questions WHERE file_id = ?");
+                        $max_stmt->execute([$file_id]);
+                        $max_result = $max_stmt->fetch();
+                        $current_max = $max_result['max_index'] ?? -1;
+                        
+                        // Update question count
+                        $count_update = $pdo->prepare("UPDATE files SET total_questions = total_questions + ? WHERE id = ?");
+                        $count_update->execute([count($questions), $file_id]);
+                    }
 
                     $q_stmt = $pdo->prepare("INSERT INTO questions (id, file_id, question_text, option1, option2, option3, option4, option5, answer, explanation, type, section, order_index) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
                     foreach ($questions as $index => $q) {
+                        $order_index = $is_merge ? ($current_max + $index + 1) : $index;
                         $q_stmt->execute([
                             uuidv4(),
                             $file_id,
@@ -58,14 +89,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
                             $q['answer'],
                             $q['explanation'],
                             (int)$q['type'],
-                            (int)$q['section'],
-                            $index
+                            $q['section'],
+                            $order_index
                         ]);
                     }
 
                     $pdo->commit();
-                    $success = "File uploaded successfully! " . count($questions) . " questions imported." . 
-                               ($answer_conversion_applied ? " Answer field conversion was applied." : "");
+                    
+                    if ($is_merge) {
+                        $success = "CSV merged successfully! " . count($questions) . " questions added.";
+                    } else {
+                        $success = "File uploaded successfully! " . count($questions) . " questions imported.";
+                    }
+                    
+                    if ($answer_conversion_applied) {
+                        $success .= " Answer field conversion was applied.";
+                    }
                 }
             } catch (Exception $e) {
                 $pdo->rollBack();
@@ -94,6 +133,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
 
 <div class="card">
     <div class="card-body">
+        <?php if ($merge_file): ?>
+            <div class="alert alert-info mb-4">
+                <strong>Merging into:</strong> <?php echo h($merge_file['display_name'] ?? $merge_file['original_filename']); ?><br>
+                <strong>Current questions:</strong> <?php echo h($merge_file['total_questions']); ?>
+                <a href="index.php" class="float-end"><small>Cancel merge</small></a>
+            </div>
+        <?php endif; ?>
+        
         <form method="post" enctype="multipart/form-data">
             <?php echo csrfInput(); ?>
             <div class="mb-3">
@@ -119,7 +166,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
                 </div>
             </div>
             
-            <button type="submit" class="btn btn-primary">Upload & Process</button>
+            <button type="submit" class="btn btn-primary"><?php echo $merge_file ? 'Merge CSV' : 'Upload & Process'; ?></button>
+            <?php if ($merge_file): ?>
+                <a href="file-view.php?id=<?php echo $merge_file['id']; ?>" class="btn btn-outline-secondary">Cancel</a>
+            <?php else: ?>
+                <a href="index.php" class="btn btn-outline-secondary">Back</a>
+            <?php endif; ?>
         </form>
     </div>
 </div>

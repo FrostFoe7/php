@@ -124,6 +124,20 @@ function parseCSV($filepath, $forceConvert = false) {
                 }
             }
             
+            // Convert section to string if it's numeric
+            if (isset($q['section']) && is_numeric($q['section'])) {
+                $section_val = (int)$q['section'];
+                // Map common numeric sections to codes, or keep as string
+                $section_map = [
+                    0 => '0',
+                    1 => 'p',
+                    2 => 'c',
+                    3 => 'm',
+                    4 => 'b'
+                ];
+                $q['section'] = $section_map[$section_val] ?? (string)$section_val;
+            }
+            
             // Basic validation: must have question text
             if (!empty($q['question_text'])) {
                 $questions[] = $q;

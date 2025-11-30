@@ -60,4 +60,18 @@ $questions = $q_stmt->fetchAll();
 </div>
 <?php endforeach; ?>
 
+<!-- Add/Upload Options -->
+<div class="row mt-5 mb-5">
+    <div class="col-md-6">
+        <a href="add-question.php?id=<?php echo $file['id']; ?>" class="btn btn-success btn-lg btn-block w-100">
+            <i class="bi bi-plus-circle"></i> Add New Question
+        </a>
+    </div>
+    <div class="col-md-6">
+        <a href="file-upload.php?merge=<?php echo $file['id']; ?>" class="btn btn-info btn-lg btn-block w-100">
+            <i class="bi bi-file-earmark-csv"></i> Upload & Merge CSV
+        </a>
+    </div>
+</div>
+
 <?php include 'templates/footer.php'; ?>
