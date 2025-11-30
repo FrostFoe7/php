@@ -55,10 +55,13 @@ $questions = $q_stmt->fetchAll();
 <?php include 'templates/nav.php'; ?>
 
 <div class="d-flex justify-content-between align-items-center mb-3 sticky-top bg-white py-3 border-bottom">
-    <h2>Edit: <?php echo h($file['original_filename']); ?></h2>
-    <div>
+    <div class="w-100">
+        <label for="filename" class="form-label">File Name</label>
+        <input type="text" id="filename" name="filename" class="form-control form-control-lg" value="<?php echo h($file['original_filename']); ?>">
+    </div>
+    <div class="ms-3 d-flex flex-shrink-0" style="gap: 0.5rem;">
         <a href="file-view.php?id=<?php echo $file['id']; ?>" class="btn btn-secondary">Cancel</a>
-        <button type="submit" form="editForm" class="btn btn-primary">Save All Changes</button>
+        <button type="submit" form="editForm" class="btn btn-primary">Save All</button>
     </div>
 </div>
 
@@ -150,20 +153,31 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         const csrf = form.querySelector('input[name="csrf_token"]').value;
+        const filenameInput = document.getElementById('filename');
         const questionCards = form.querySelectorAll('.card');
-        const data = { file_id: '<?php echo $file['id']; ?>', csrf_token: csrf, questions: {} };
+        
+        const data = { 
+            file_id: '<?php echo $file['id']; ?>', 
+            csrf_token: csrf, 
+            original_filename: filenameInput ? filenameInput.value : '<?php echo h($file['original_filename']); ?>',
+            questions: {} 
+        };
 
         questionCards.forEach(card => {
             const header = card.querySelector('.card-header');
             if (!header) return;
-            const idMatch = header.textContent.match(/ID:\s*([0-9a-fA-F-]{36})/);
-            if (!idMatch) return;
-            const qid = idMatch[1];
+            
+            // Extract QID from a more robust source if possible
+            const idHolder = header.textContent.match(/ID:\s*([0-9a-fA-F-]+)/);
+            if (!idHolder) return;
+            const qid = idHolder[1];
+
             const scope = card;
             const getVal = sel => {
                 const el = scope.querySelector(sel);
                 return el ? el.value : '';
             };
+
             data.questions[qid] = {
                 question_text: getVal(`textarea[name="questions[${qid}][question_text]"]`),
                 option1: getVal(`textarea[name="questions[${qid}][option1]"]`),
@@ -174,7 +188,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 answer: getVal(`input[name="questions[${qid}][answer]"]`),
                 explanation: getVal(`textarea[name="questions[${qid}][explanation]"]`),
                 type: getVal(`input[name="questions[${qid}][type]"]`),
-                section: getVal(`input[name="questions[${qid}][section]"]`)
+                section: getVal(`select[name="questions[${qid}][section]"]`)
             };
         });
 
@@ -187,8 +201,13 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(txt => {
             let json;
             try { json = JSON.parse(txt); } catch { json = { error: 'Invalid JSON response', raw: txt }; }
+            
             if (json.success) {
-                showNotice('Saved Successfully (' + json.updated + ' updated)', 'success');
+                showNotice('Saved Successfully (' + (json.updated_questions || 0) + ' questions, file name ' + (json.file_renamed ? 'updated' : 'unchanged') + ')', 'success');
+                if (json.file_renamed && filenameInput) {
+                    // Update the title and input to reflect the new name
+                    document.querySelector('h2').textContent = 'Edit: ' + filenameInput.value;
+                }
             } else {
                 showNotice('Save failed: ' + (json.error || 'Unknown error'), 'danger');
             }

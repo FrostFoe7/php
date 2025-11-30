@@ -9,6 +9,10 @@ $answer_conversion_applied = false;
 $merge_file_id = $_GET['merge'] ?? null;
 $merge_file = null;
 
+// Fetch categories for the dropdown
+$cat_stmt = $pdo->query("SELECT id, name FROM categories ORDER BY name ASC");
+$categories = $cat_stmt->fetchAll();
+
 // If merging, verify the file exists
 if ($merge_file_id) {
     $merge_stmt = $pdo->prepare("SELECT * FROM files WHERE id = ?");
@@ -25,23 +29,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
     verifyCsrfToken($_POST['csrf_token'] ?? '');
 
     $file = $_FILES['csv_file'];
+    $category_id = (!empty($_POST['category_id'])) ? $_POST['category_id'] : null;
+
     if ($file['error'] === UPLOAD_ERR_OK) {
         $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
         if ($ext !== 'csv') {
             $error = "Only CSV files are allowed.";
         } else {
             try {
-                // Check if user wants to force convert answers
                 $forceConvert = isset($_POST['convert_zero_indexed']) && $_POST['convert_zero_indexed'] === '1';
-                
                 $questions = parseCSV($file['tmp_name'], $forceConvert);
                 
-                // Check if conversion was applied
                 if ($forceConvert) {
                     $warning = "Answer fields have been automatically converted from 0-indexed to 1-indexed format.";
                     $answer_conversion_applied = true;
                 } else {
-                    // Show info if auto-detection happened
                     $answer_conversion_applied = detectZeroIndexedAnswers($questions);
                     if ($answer_conversion_applied) {
                         $warning = "Auto-detected 0-indexed answers and converted them to 1-indexed format.";
@@ -57,18 +59,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
                     $is_merge = !empty($merge_file_id);
 
                     if (!$is_merge) {
-                        // Create new file
                         $file_id = uuidv4();
-                        $stmt = $pdo->prepare("INSERT INTO files (id, original_filename, total_questions) VALUES (?, ?, ?)");
-                        $stmt->execute([$file_id, $file['name'], count($questions)]);
+                        $stmt = $pdo->prepare("INSERT INTO files (id, original_filename, total_questions, category_id) VALUES (?, ?, ?, ?)");
+                        $stmt->execute([$file_id, $file['name'], count($questions), $category_id]);
                     } else {
-                        // Get current max order_index for merging
+                        // Merging doesn't change the category, but we'll update the question count.
                         $max_stmt = $pdo->prepare("SELECT MAX(order_index) as max_index FROM questions WHERE file_id = ?");
                         $max_stmt->execute([$file_id]);
                         $max_result = $max_stmt->fetch();
                         $current_max = $max_result['max_index'] ?? -1;
                         
-                        // Update question count
                         $count_update = $pdo->prepare("UPDATE files SET total_questions = total_questions + ? WHERE id = ?");
                         $count_update->execute([count($questions), $file_id]);
                     }
@@ -144,12 +144,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
         <form method="post" enctype="multipart/form-data">
             <?php echo csrfInput(); ?>
             <div class="mb-3">
-                <label class="form-label">Select CSV File</label>
-                <input type="file" name="csv_file" class="form-control" accept=".csv" required>
+                <label class="form-label" for="csv_file">Select CSV File</label>
+                <input type="file" id="csv_file" name="csv_file" class="form-control" accept=".csv" required>
                 <div class="form-text">
                     Required columns: questions, option1, option2, option3, option4, option5, answer, explanation, type, section
                 </div>
             </div>
+
+            <?php if (!$merge_file && !empty($categories)): ?>
+            <div class="mb-3">
+                <label class="form-label" for="category_id">Assign to Category (Optional)</label>
+                <select name="category_id" id="category_id" class="form-select">
+                    <option value="">-- No Category --</option>
+                    <?php foreach ($categories as $cat): ?>
+                        <option value="<?php echo h($cat['id']); ?>"><?php echo h($cat['name']); ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <?php elseif (!$merge_file): ?>
+                <div class="mb-3">
+                     <label class="form-label">Assign to Category</label>
+                    <div class="alert alert-secondary">
+                        No categories found. <a href="categories.php">Create a category</a> to assign one to this file.
+                    </div>
+                </div>
+            <?php endif; ?>
             
             <div class="mb-3">
                 <div class="form-check">

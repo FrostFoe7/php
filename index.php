@@ -137,7 +137,7 @@ if ($sort_by === 'category') {
                         <td>
                             <a href="file-view.php?id=<?php echo $file['id']; ?>" class="btn btn-sm btn-info">View</a>
                             <a href="file-edit.php?id=<?php echo $file['id']; ?>" class="btn btn-sm btn-warning">Edit</a>
-                            <button class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#editModal" onclick="fillEditModal('<?php echo $file['id']; ?>', <?php echo json_encode($categories); ?>)">Rename</button>
+                            <button class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#editModal" onclick='fillEditModal(<?php echo json_encode($file); ?>, <?php echo json_encode($categories); ?>)'>Rename</button>
                             <a href="file-delete.php?id=<?php echo $file['id']; ?>" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?');">Delete</a>
                         </td>
                     </tr>
@@ -183,7 +183,7 @@ if ($sort_by === 'category') {
                 <td>
                     <a href="file-view.php?id=<?php echo $file['id']; ?>" class="btn btn-sm btn-info">View</a>
                     <a href="file-edit.php?id=<?php echo $file['id']; ?>" class="btn btn-sm btn-warning">Edit</a>
-                    <button class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#editModal" onclick="fillEditModal('<?php echo $file['id']; ?>', <?php echo json_encode($categories); ?>)">Rename</button>
+                    <button class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#editModal" onclick='fillEditModal(<?php echo json_encode($file); ?>, <?php echo json_encode($categories); ?>)'>Rename</button>
                     <a href="file-delete.php?id=<?php echo $file['id']; ?>" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?');">Delete</a>
                 </td>
             </tr>
@@ -229,33 +229,20 @@ if ($sort_by === 'category') {
 <?php include 'templates/footer.php'; ?>
 
 <script>
-let categoriesData = <?php echo json_encode($categories); ?>;
+function fillEditModal(fileData, categories) {
+    document.getElementById('modal_file_id').value = fileData.id;
+    document.getElementById('modal_display_name').value = fileData.display_name || fileData.original_filename;
 
-function fillEditModal(fileId, categories) {
-    document.getElementById('modal_file_id').value = fileId;
-    document.getElementById('modal_display_name').value = '';
-    
-    // Fetch current file data
-    fetch('api/get-file.php?id=' + fileId)
-        .then(r => r.json())
-        .then(data => {
-            document.getElementById('modal_display_name').value = data.display_name || data.original_filename;
-            
-            // Fill category select
-            const select = document.getElementById('modal_category_id');
-            select.innerHTML = '<option value="">-- Select Category --</option>';
-            categories.forEach(cat => {
-                const option = document.createElement('option');
-                option.value = cat.id;
-                option.textContent = cat.name;
-                if (cat.id === data.category_id) {
-                    option.selected = true;
-                }
-                select.appendChild(option);
-            });
-        })
-        .catch(err => console.error('Error:', err));
+    const select = document.getElementById('modal_category_id');
+    select.innerHTML = '<option value="">-- Select Category --</option>';
+    categories.forEach(cat => {
+        const option = document.createElement('option');
+        option.value = cat.id;
+        option.textContent = cat.name;
+        if (cat.id === fileData.category_id) {
+            option.selected = true;
+        }
+        select.appendChild(option);
+    });
 }
 </script>
-
-<?php include 'templates/footer.php'; ?>

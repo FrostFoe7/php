@@ -29,7 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_POST['answer'],
             $_POST['explanation'],
             (int)$_POST['type'],
-            (int)$_POST['section'],
+            $_POST['section'],
             $id
         ]);
         
@@ -87,8 +87,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <input type="number" name="type" class="form-control" value="<?php echo h($q['type']); ?>">
                 </div>
                 <div class="col-md-4 mb-3">
-                    <label class="form-label">Section (Int)</label>
-                    <input type="number" name="section" class="form-control" value="<?php echo h($q['section']); ?>">
+                    <label class="form-label">Section</label>
+                    <select name="section" class="form-select">
+                        <option value="0" <?php echo ($q['section'] ?? '0') === '0' ? 'selected' : ''; ?>>-- Select --</option>
+                        <option value="p" <?php echo ($q['section'] ?? '') === 'p' ? 'selected' : ''; ?>>Physics (P)</option>
+                        <option value="c" <?php echo ($q['section'] ?? '') === 'c' ? 'selected' : ''; ?>>Chemistry (C)</option>
+                        <option value="m" <?php echo ($q['section'] ?? '') === 'm' ? 'selected' : ''; ?>>Math (M)</option>
+                        <option value="b" <?php echo ($q['section'] ?? '') === 'b' ? 'selected' : ''; ?>>Biology (B)</option>
+                        <option value="bm" <?php echo ($q['section'] ?? '') === 'bm' ? 'selected' : ''; ?>>Bio + Math (BM)</option>
+                        <option value="bn" <?php echo ($q['section'] ?? '') === 'bn' ? 'selected' : ''; ?>>Bio + Non-Bio (BN)</option>
+                        <option value="e" <?php echo ($q['section'] ?? '') === 'e' ? 'selected' : ''; ?>>English (E)</option>
+                        <option value="i" <?php echo ($q['section'] ?? '') === 'i' ? 'selected' : ''; ?>>ICT (I)</option>
+                        <option value="gk" <?php echo ($q['section'] ?? '') === 'gk' ? 'selected' : ''; ?>>General Knowledge (GK)</option>
+                        <option value="iq" <?php echo ($q['section'] ?? '') === 'iq' ? 'selected' : ''; ?>>IQ Test (IQ)</option>
+                    </select>
                 </div>
             </div>
 
