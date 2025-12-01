@@ -9,11 +9,15 @@ function ensureUploadDirExists(string $dir = IMAGE_UPLOAD_DIR): void
 
 function getImageExtensionFromMime(string $mime): string
 {
-    return match ($mime) {
-        'image/jpeg' => 'jpg',
-        'image/png' => 'png',
-        default => 'bin'
-    };
+    if ($mime === 'image/jpeg') {
+        return 'jpg';
+    }
+
+    if ($mime === 'image/png') {
+        return 'png';
+    }
+
+    return 'bin';
 }
 
 function storeUploadedImage(array $file): string
