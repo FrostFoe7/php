@@ -5,6 +5,12 @@ requireLogin();
 $id = $_GET['id'] ?? '';
 
 if ($id) {
+    $image_stmt = $pdo->prepare("SELECT question_image, explanation_image FROM questions WHERE file_id = ?");
+    $image_stmt->execute([$id]);
+    while ($row = $image_stmt->fetch()) {
+        deleteUploadedImage($row['question_image']);
+        deleteUploadedImage($row['explanation_image']);
+    }
     // Verify CSRF via GET? No, usually POST is better for delete. 
     // But user asked for file-delete.php, often implied as a link.
     // I'll make it a confirmation page or check referer? 

@@ -73,7 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
                         $count_update->execute([count($questions), $file_id]);
                     }
 
-                    $q_stmt = $pdo->prepare("INSERT INTO questions (id, file_id, question_text, option1, option2, option3, option4, option5, answer, explanation, type, section, order_index) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                    $q_stmt = $pdo->prepare("INSERT INTO questions (id, file_id, question_text, option1, option2, option3, option4, option5, answer, explanation, question_image, explanation_image, type, section, order_index) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
                     foreach ($questions as $index => $q) {
                         $order_index = $is_merge ? ($current_max + $index + 1) : $index;
@@ -88,6 +88,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
                             $q['option5'],
                             $q['answer'],
                             $q['explanation'],
+                            null,
+                            null,
                             (int)$q['type'],
                             $q['section'],
                             $order_index

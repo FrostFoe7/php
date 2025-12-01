@@ -10,6 +10,18 @@ define('DB_CHARSET', 'utf8mb4');
 define('APP_NAME', 'Universal Question Bank Manager');
 define('BASE_URL', '/php-api'); // Adjust based on where it's hosted
 
+define('APP_PUBLIC_URL', '/php'); // The public URL path that corresponds to this folder
+define('UPLOADS_DIR', __DIR__ . '/../uploads');
+define('IMAGE_UPLOAD_SUBDIR', 'images');
+define('IMAGE_UPLOAD_DIR', UPLOADS_DIR . '/' . IMAGE_UPLOAD_SUBDIR);
+define('UPLOADS_URL_PATH', rtrim(APP_PUBLIC_URL, '/') . '/uploads');
+define('IMAGE_UPLOAD_URL', rtrim(UPLOADS_URL_PATH, '/') . '/' . IMAGE_UPLOAD_SUBDIR);
+define('MAX_IMAGE_UPLOAD_BYTES', 100 * 1024);
+define('ALLOWED_IMAGE_MIME_TYPES', [
+	'image/jpeg',
+	'image/png'
+]);
+
 // Error Reporting (Disable in production)
 error_reporting(E_ALL);
 ini_set('display_errors', 1);

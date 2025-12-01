@@ -1,6 +1,7 @@
 <?php
 require_once '../includes/config.php';
 require_once '../includes/db.php';
+require_once '../includes/image_upload.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -32,6 +33,13 @@ $routes = [
     'question' => 'routes/get-question.php',
     'update-question' => 'routes/update-question.php'
 ];
+
+function attachImageUrls(array $question): array
+{
+    $question['question_image_url'] = getUploadedImageUrl($question['question_image']);
+    $question['explanation_image_url'] = getUploadedImageUrl($question['explanation_image']);
+    return $question;
+}
 
 if (array_key_exists($route, $routes)) {
     include $routes[$route];

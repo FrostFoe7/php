@@ -16,20 +16,32 @@ $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     verifyCsrfToken($_POST['csrf_token'] ?? '');
-    
+
+    $uploadedImages = [];
+
     try {
         $pdo->beginTransaction();
-        
+
+        $question_image = uploadImageFromInput('question_image');
+        if ($question_image) {
+            $uploadedImages[] = $question_image;
+        }
+
+        $explanation_image = uploadImageFromInput('explanation_image');
+        if ($explanation_image) {
+            $uploadedImages[] = $explanation_image;
+        }
+
         // Get current max order_index
         $max_stmt = $pdo->prepare("SELECT MAX(order_index) as max_index FROM questions WHERE file_id = ?");
         $max_stmt->execute([$id]);
         $max_result = $max_stmt->fetch();
         $next_order_index = ($max_result['max_index'] ?? -1) + 1;
-        
+
         $q_stmt = $pdo->prepare("INSERT INTO questions 
-            (id, file_id, question_text, option1, option2, option3, option4, option5, answer, explanation, type, section, order_index) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        
+            (id, file_id, question_text, option1, option2, option3, option4, option5, answer, explanation, question_image, explanation_image, type, section, order_index) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+
         $q_stmt->execute([
             uuidv4(),
             $id,
@@ -41,20 +53,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_POST['option5'] ?? '',
             $_POST['answer'] ?? '',
             $_POST['explanation'] ?? '',
+            $question_image,
+            $explanation_image,
             (int)($_POST['type'] ?? 0),
             $_POST['section'] ?? '0',
             $next_order_index
         ]);
-        
+
         // Update total_questions count
         $count_stmt = $pdo->prepare("UPDATE files SET total_questions = (SELECT COUNT(*) FROM questions WHERE file_id = ?) WHERE id = ?");
         $count_stmt->execute([$id, $id]);
-        
+
         $pdo->commit();
         $success = "Question added successfully!";
-        
+
     } catch (Exception $e) {
         $pdo->rollBack();
+        foreach ($uploadedImages as $filename) {
+            deleteUploadedImage($filename);
+        }
         $error = "Error adding question: " . $e->getMessage();
     }
 }
@@ -78,7 +95,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <div class="card shadow-sm">
     <div class="card-body">
-        <form method="post">
+        <form method="post" enctype="multipart/form-data">
             <?php echo csrfInput(); ?>
             
             <div class="mb-4">
@@ -129,6 +146,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="mb-4">
                 <label class="form-label">Explanation (Optional)</label>
                 <textarea name="explanation" class="form-control" rows="3" placeholder="Explanation for this question (HTML allowed)"></textarea>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Question Image (JPG/PNG, &le;100KB)</label>
+                    <input type="file" name="question_image" accept="image/jpeg,image/png" class="form-control">
+                    <div class="form-text">If provided, the image will auto-fit to the screen when displayed.</div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Explanation Image (Optional)</label>
+                    <input type="file" name="explanation_image" accept="image/jpeg,image/png" class="form-control">
+                    <div class="form-text">Upload an image to accompany the explanation (optional).</div>
+                </div>
             </div>
             
             <div class="d-grid gap-2">

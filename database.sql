@@ -58,6 +58,8 @@ CREATE TABLE IF NOT EXISTS `questions` (
   `option5` longtext COLLATE utf8mb4_unicode_ci,
   `answer` varchar(10) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `explanation` longtext COLLATE utf8mb4_unicode_ci,
+  `question_image` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `explanation_image` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `type` int(11) DEFAULT '0',
   `section` int(11) DEFAULT '0',
   `order_index` int(11) DEFAULT '0',

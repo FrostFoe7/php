@@ -5,4 +5,5 @@ require_once __DIR__ . '/uuid.php';
 require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/security.php';
 require_once __DIR__ . '/csv_parser.php';
+require_once __DIR__ . '/image_upload.php';
 ?>

@@ -10,6 +10,7 @@ if ($file_id) {
 }
 
 $questions = $stmt->fetchAll();
+$questions = array_map('attachImageUrls', $questions);
 
 echo json_encode($questions);
 ?>

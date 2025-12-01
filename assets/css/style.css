@@ -51,3 +51,11 @@ textarea {
     width: 100%;
   }
 }
+
+.question-media img,
+.explanation-media img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+}
