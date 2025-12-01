@@ -65,6 +65,16 @@ $questions = $q_stmt->fetchAll();
     </div>
 </div>
 
+<div class="row mb-3">
+    <div class="col">
+        <div class="btn-group w-100" role="group">
+            <a href="add-question.php?id=<?php echo $file['id']; ?>" class="btn btn-outline-success">Add Question</a>
+            <a href="file-upload.php?merge=<?php echo $file['id']; ?>" class="btn btn-outline-info">Merge CSV</a>
+            <a href="file-view.php?id=<?php echo $file['id']; ?>" class="btn btn-outline-secondary">Preview File</a>
+        </div>
+    </div>
+</div>
+
 <?php if ($success): ?>
     <div class="alert alert-success"><?php echo h($success); ?></div>
 <?php endif; ?>
