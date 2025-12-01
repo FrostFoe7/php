@@ -18,8 +18,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     verifyCsrfToken($_POST['csrf_token'] ?? '');
 
     $uploadedImages = [];
-    $question_image = $q['question_image'];
-    $explanation_image = $q['explanation_image'];
+    $question_image = $q['question_image'] ?? null;
+    $explanation_image = $q['explanation_image'] ?? null;
     $removeQuestionImage = !empty($_POST['remove_question_image']);
     $removeExplanationImage = !empty($_POST['remove_explanation_image']);
 
@@ -111,9 +111,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
             <div class="mb-3">
                 <label class="form-label">Question Image (Optional)</label>
-                <?php if ($q['question_image']): ?>
+                <?php if ($question_image): ?>
                     <div class="image-preview mb-2">
-                        <img src="<?php echo h(getUploadedImageUrl($q['question_image'])); ?>" alt="Question image">
+                        <img src="<?php echo h(getUploadedImageUrl($question_image)); ?>" alt="Question image">
                     </div>
                     <div class="form-check mb-2">
                         <input class="form-check-input" type="checkbox" name="remove_question_image" id="removeQuestionImage" value="1">
@@ -166,9 +166,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
             <div class="mb-3">
                 <label class="form-label">Explanation Image (Optional)</label>
-                <?php if ($q['explanation_image']): ?>
+                <?php if ($explanation_image): ?>
                     <div class="image-preview mb-2">
-                        <img src="<?php echo h(getUploadedImageUrl($q['explanation_image'])); ?>" alt="Explanation image">
+                        <img src="<?php echo h(getUploadedImageUrl($explanation_image)); ?>" alt="Explanation image">
                     </div>
                     <div class="form-check mb-2">
                         <input class="form-check-input" type="checkbox" name="remove_explanation_image" id="removeExplanationImage" value="1">

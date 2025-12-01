@@ -34,11 +34,12 @@ $questions = $q_stmt->fetchAll();
 </div>
 
 <?php foreach ($questions as $q): ?>
+<?php $questionImage = $q['question_image'] ?? null; $explanationImage = $q['explanation_image'] ?? null; ?>
 <div class="card mb-2">
     <div class="card-body">
-        <?php if ($q['question_image']): ?>
+        <?php if ($questionImage): ?>
             <div class="question-media mb-2">
-                <img src="<?php echo h(getUploadedImageUrl($q['question_image'])); ?>" alt="Question visual">
+                <img src="<?php echo h(getUploadedImageUrl($questionImage)); ?>" alt="Question visual">
             </div>
         <?php endif; ?>
         <h5 class="card-title">Q<?php echo $q['order_index'] + 1; ?>: <?php echo $q['question_text']; // Allow HTML ?></h5>
@@ -57,9 +58,9 @@ $questions = $q_stmt->fetchAll();
                 <p><strong>Type:</strong> <?php echo h($q['type']); ?> | <strong>Section:</strong> <?php echo h($q['section']); ?></p>
                 <div class="alert alert-light">
                     <strong>Explanation:</strong><br>
-                    <?php if ($q['explanation_image']): ?>
+                    <?php if ($explanationImage): ?>
                         <div class="explanation-media mb-2">
-                            <img src="<?php echo h(getUploadedImageUrl($q['explanation_image'])); ?>" alt="Explanation visual">
+                            <img src="<?php echo h(getUploadedImageUrl($explanationImage)); ?>" alt="Explanation visual">
                         </div>
                     <?php endif; ?>
                     <?php echo $q['explanation']; // Allow HTML ?>

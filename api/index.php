@@ -36,8 +36,11 @@ $routes = [
 
 function attachImageUrls(array $question): array
 {
-    $question['question_image_url'] = getUploadedImageUrl($question['question_image']);
-    $question['explanation_image_url'] = getUploadedImageUrl($question['explanation_image']);
+    $questionImage = $question['question_image'] ?? null;
+    $explanationImage = $question['explanation_image'] ?? null;
+
+    $question['question_image_url'] = getUploadedImageUrl($questionImage);
+    $question['explanation_image_url'] = getUploadedImageUrl($explanationImage);
     return $question;
 }
 
